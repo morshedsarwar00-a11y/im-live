@@ -2441,7 +2441,7 @@ button{touch-action:manipulation; -webkit-tap-highlight-color:transparent}
       <div class="lpHead chooserHead">
         <button type="button" class="lpBack" onclick="backToHero()" aria-label="Back to sign-in options">‹</button>
         <svg class="gIcon" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 8 3l5.7-5.7C34.3 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 8 3l5.7-5.7C34.3 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.1 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
-        <div><b class="chooserTitle">Choose your account</b><span class="chooserSub">to continue to <b>Im Live</b> — no password needed</span></div>
+        <div><b class="chooserTitle">Choose your account</b><span class="chooserSub">to continue to <b>Im Live</b></span></div>
       </div>
       <div class="deviceBar" id="deviceBar"></div>
       <div id="deviceAccounts"></div>
@@ -2450,9 +2450,28 @@ button{touch-action:manipulation; -webkit-tap-highlight-color:transparent}
       <div class="lpDivider"><span>Use another account</span></div>
       <form id="googleOther" novalidate onsubmit="return doGoogleOther(event)">
         <div class="field"><label for="gEmail">Gmail address</label><input id="gEmail" type="email" placeholder="you@gmail.com" autocomplete="email" oninput="document.getElementById('gErr').textContent=''"></div>
-        <button class="btn" id="gOtherBtn" type="submit" style="width:100%">Continue without password</button>
+        <button class="btn" id="gOtherBtn" type="submit" style="width:100%">Continue</button>
       </form>
-      <p class="note" style="text-align:center; margin-top:8px">One device can hold at most 2 Im Live accounts.</p>
+      <p class="note" id="gDeviceNote" style="text-align:center; margin-top:8px">One device can hold at most 2 Im Live accounts.</p>
+      <!-- Password step (live server sign-in): after picking a Gmail, the
+           account's password is asked here — the server checks it. A
+           Gmail with no account yet can register from this step instead:
+           that files a pending Host application for the Staff Panel. -->
+      <div id="gPwStep" class="hidden">
+        <div class="lpHead chooserHead">
+          <button type="button" class="lpBack" onclick="backToGoogleChooser()" aria-label="Back to accounts">‹</button>
+          <div><b class="chooserTitle" id="gPwTitle">Sign in</b><span class="chooserSub" id="gPwEmail"></span></div>
+        </div>
+        <form id="gPwForm" novalidate onsubmit="return doGooglePwSubmit(event)">
+          <div class="field" id="gRegNameField" style="display:none"><label for="gRegName">Your name</label><input id="gRegName" type="text" placeholder="e.g. Tanvir Hasan" autocomplete="name"></div>
+          <div class="field"><label for="gPw">Password</label><input id="gPw" type="password" placeholder="Your Im Live password" autocomplete="current-password"></div>
+          <div class="err" id="gPwErr"></div>
+          <div class="okmsg" id="gPwMsg"></div>
+          <button class="btn" id="gPwBtn" type="submit" style="width:100%">Sign in</button>
+        </form>
+        <p class="note" style="text-align:center; margin-top:8px"><a href="#" onclick="toggleGooglePwMode(); return false;" id="gPwModeLink">New here? Create an account</a></p>
+        <p class="note" style="text-align:center; margin-top:4px"><a href="#" onclick="backToGoogleChooser(); return false;">&#8592; Use a different account</a></p>
+      </div>
     </div>
 
     <!-- Sign in with phone number — code verification, no password -->
@@ -2460,8 +2479,9 @@ button{touch-action:manipulation; -webkit-tap-highlight-color:transparent}
       <div class="lpHead">
         <button type="button" class="lpBack" onclick="backToHero()" aria-label="Back to sign-in options">‹</button>
         <span class="lpPhoneIco"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.6"/><line x1="10.5" y1="18.4" x2="13.5" y2="18.4" stroke-linecap="round"/></svg></span>
-        <div><b>Sign in with phone</b><span>We send a verification code — no password</span></div>
+        <div><b>Sign in with phone</b><span>Not connected to the live server yet — use Google sign-in</span></div>
       </div>
+      <p class="note" style="margin:0 0 10px; background:#fff7e0; border:1px solid #f0d48a; border-radius:10px; padding:9px 11px">&#128241; <b>Phone sign-in is not connected to the live server yet</b> — the server signs in by Gmail. Please use &ldquo;Sign in with Google&rdquo; for now.</p>
       <form id="phoneStep1" novalidate onsubmit="return doPhoneSend(event)">
         <div class="field"><label for="phNumber">Phone number</label><input id="phNumber" type="tel" placeholder="+880 1XXX-XXXXXX" autocomplete="tel"></div>
         <div class="err" id="phErr"></div>
@@ -2904,6 +2924,24 @@ button{touch-action:manipulation; -webkit-tap-highlight-color:transparent}
   </div>
 </div>
 
+<!-- Change password (live server): shown after sign-in when the server
+     says this account must change its password (temporary password). -->
+<div class="sheetWrap" id="pwChangeSheet">
+  <div class="scrim" onclick="closePwChangeSheet()"></div>
+  <div class="sheet">
+    <div class="sheetHead"><h2>Change your password</h2><button class="iconBtn" onclick="closePwChangeSheet()" aria-label="Close">&#10005;</button></div>
+    <p class="note" style="margin:0 0 12px">Your account is using a temporary password. Set a new password now (at least 8 characters, with a letter and a number).</p>
+    <form novalidate onsubmit="return doChangePassword(event)">
+      <div class="field"><label for="pwCur">Current password</label><input id="pwCur" type="password" placeholder="Temporary password" autocomplete="current-password"></div>
+      <div class="field"><label for="pwNew">New password</label><input id="pwNew" type="password" placeholder="At least 8 characters, letter + number" autocomplete="new-password"></div>
+      <div class="err" id="pwChangeErr"></div>
+      <div class="okmsg" id="pwChangeMsg"></div>
+      <button class="btn" type="submit" style="width:100%">Change password</button>
+    </form>
+    <p class="note" style="text-align:center; margin-top:8px"><a href="#" onclick="closePwChangeSheet(); return false;">Remind me later</a></p>
+  </div>
+</div>
+
 <!-- ================= GENERIC SUB PAGE ================= -->
 <div class="fullPage" id="subPage">
   <div class="fpHead">
@@ -3101,8 +3139,6 @@ const state = {
     {name:"Rafi Chowdhury", email:"rafi@example.com", role:"host", team:"A", time:"Today, 09:41"},
     {name:"Danish Ali", email:"danish@example.com", role:"host", team:"B", time:"Yesterday, 21:18"}
   ],
-  approvedExtra: [],     // accounts approved/created in the panel this session — these may sign in
-  removedEmails: [],     // accounts the Owner removed this session — these may no longer sign in
   coins: 2450, diamonds: 36,
   wealth: 7, charm: 5,
   country: "All", category: "All",
@@ -3166,6 +3202,175 @@ const state = {
     ]}
   }
 };
+/* ================= live backend API =================
+   The production API (NestJS + Supabase) powers sign-in, the Staff
+   Panel, panel settings and reports. Everything else in this app —
+   live rooms, voice, channels, gifts, coins, recharge, games,
+   messages, moments — stays simulated demo data: the server does
+   not run those yet, so they are left exactly as they are.
+   The server address lives in ONE place (API_BASE_URL below). To
+   point the app at a new deployment, change that one line only —
+   no other line in this file mentions the server. */
+const API_BASE_URL = "https://imhereapi-myv5r71y.back4.app";
+/* Sign-in tokens: kept in memory and in localStorage, so a reload
+   keeps the session. They are the ONLY secret the app stores — no
+   password is ever stored. */
+const API_TOKEN_KEY = "imlive_tokens_v1";
+const API_DEVICE_KEY = "imlive_device_accounts_v1";
+const API_SETTINGS_KEY = "imlive_panel_settings_v1";
+let apiAccessToken = "", apiRefreshToken = "";
+try {
+  const _saved = JSON.parse(localStorage.getItem(API_TOKEN_KEY) || "null");
+  if (_saved) { apiAccessToken = _saved.accessToken || ""; apiRefreshToken = _saved.refreshToken || ""; }
+} catch (e) {}
+function apiSaveTokens(a, r) {
+  apiAccessToken = a || ""; apiRefreshToken = r || "";
+  try {
+    if (apiAccessToken || apiRefreshToken) localStorage.setItem(API_TOKEN_KEY, JSON.stringify({accessToken: apiAccessToken, refreshToken: apiRefreshToken}));
+    else localStorage.removeItem(API_TOKEN_KEY);
+  } catch (e) {}
+}
+function apiClearTokens() { apiSaveTokens("", ""); }
+/* Panel settings the Owner last read from the server, cached on this
+   device. GET /api/settings is Owner-only, so a non-Owner signing in
+   cannot read them from the server — the cached copy is what the
+   sign-in gate consults (maintenance / applications-closed). The
+   Owner's copy is always refreshed from the server after sign-in. */
+function loadCachedSettings() {
+  try { return JSON.parse(localStorage.getItem(API_SETTINGS_KEY) || "null") || {applicationsOpen: true, maintenanceMode: false}; }
+  catch (e) { return {applicationsOpen: true, maintenanceMode: false}; }
+}
+function saveCachedSettings(v) {
+  try { localStorage.setItem(API_SETTINGS_KEY, JSON.stringify(v)); } catch (e) {}
+}
+function applyServerSettings(d) {
+  state.panelSettings = {applicationsOpen: !!d.new_applications_open, maintenanceMode: !!d.maintenance_mode};
+  saveCachedSettings(state.panelSettings);
+}
+/* One error message for the user from any API failure. Validation
+   errors come back as a list — the first one is shown. A failed
+   fetch (server down, no network) is reported as unreachable, never
+   as a wrong password or a fake success. */
+function apiUserMessage(err) {
+  if (err && err.isNetwork) return "🌐 Server unreachable — check your connection and try again.";
+  if (err && err.message) return String(err.message);
+  return "Something went wrong — please try again.";
+}
+function apiThrowFromData(res, data) {
+  let m = (data && data.message) || ("Request failed (" + res.status + ")");
+  if (Array.isArray(m)) m = m[0] || ("Request failed (" + res.status + ")");
+  const err = new Error(String(m));
+  err.status = res.status; err.data = data;
+  return err;
+}
+/* The one way this app talks to the server. Sends JSON, attaches the
+   access token when one is stored, and on a 401 tries ONE token
+   refresh and retries the call once. Anything else is thrown for the
+   caller to show. Pass {form: FormData} for a multipart call
+   (report evidence) — the browser then sets the content type. */
+async function apiFetch(path, opts) {
+  opts = opts || {};
+  const headers = {};
+  if (!opts.form) headers["Content-Type"] = "application/json";
+  if (apiAccessToken) headers["Authorization"] = "Bearer " + apiAccessToken;
+  let res;
+  try {
+    res = await fetch(API_BASE_URL + path, {
+      method: opts.method || "GET",
+      headers: headers,
+      body: opts.form ? opts.form : (opts.body ? JSON.stringify(opts.body) : undefined)
+    });
+  } catch (e) {
+    const err = new Error("Server unreachable");
+    err.isNetwork = true;
+    throw err;
+  }
+  if (res.status === 401 && apiRefreshToken && !opts._retried) {
+    try {
+      const r = await fetch(API_BASE_URL + "/api/auth/refresh", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({refreshToken: apiRefreshToken})
+      });
+      if (r.ok) {
+        const t = await r.json();
+        apiSaveTokens(t.accessToken, t.refreshToken || apiRefreshToken);
+        const retryOpts = Object.assign({}, opts, {_retried: true});
+        return apiFetch(path, retryOpts);
+      }
+    } catch (e) { /* refresh failed — fall through to the 401 below */ }
+    apiClearTokens();
+  }
+  let data = null;
+  try { data = await res.json(); } catch (e) { data = null; }
+  if (!res.ok) throw apiThrowFromData(res, data);
+  return data;
+}
+/* Gmail accounts signed in on THIS device (chooser list). Stored in
+   localStorage as [{email, name}] so the chooser survives a reload.
+   At most 2 — a UI rule only; the server, not this list, decides
+   who may sign in. */
+let deviceAccounts = [];
+try {
+  const _dev = JSON.parse(localStorage.getItem(API_DEVICE_KEY) || "null");
+  if (Array.isArray(_dev)) deviceAccounts = _dev.filter(x => x && x.email).map(x => ({email: String(x.email).toLowerCase(), name: x.name || ""}));
+} catch (e) {}
+function saveDeviceAccounts() {
+  try { localStorage.setItem(API_DEVICE_KEY, JSON.stringify(deviceAccounts)); } catch (e) {}
+}
+function deviceHas(email) { return deviceAccounts.some(x => x.email === String(email || "").toLowerCase()); }
+function deviceRemember(email, name) {
+  const em = String(email || "").toLowerCase();
+  if (!em) return;
+  const ex = deviceAccounts.find(x => x.email === em);
+  if (ex) { if (name) ex.name = name; }
+  else if (deviceAccounts.length < DEVICE_ACCOUNT_LIMIT) deviceAccounts.push({email: em, name: name || ""});
+  saveDeviceAccounts();
+}
+/* The server's user object -> the person shape this app renders
+   ({name, username, email, bio, id, seed}). The avatar seed is
+   derived from the account id so it stays the same every sign-in. */
+function apiUserToPerson(u) {
+  const name = u.display_name || (u.email || "").split("@")[0] || "Im Live user";
+  const idStr = String(u.id || u.email || "");
+  let seed = 0;
+  for (let i = 0; i < idStr.length; i++) seed = (seed + idStr.charCodeAt(i)) % 10;
+  return {
+    name: name,
+    username: (u.email || "").split("@")[0] || "user",
+    email: u.email || "",
+    bio: (ROLE_LABEL[u.role] || "Host"),
+    id: u.id || "",
+    seed: seed
+  };
+}
+/* Server timestamps ("2026-11-11T16:28:46Z") -> the app's
+   "Today, 14:05" style. */
+function apiTime(iso) {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const now = new Date();
+  const hh = String(d.getHours()).padStart(2, "0"), mm = String(d.getMinutes()).padStart(2, "0");
+  const y = new Date(now); y.setDate(now.getDate() - 1);
+  if (d.toDateString() === now.toDateString()) return "Today, " + hh + ":" + mm;
+  if (d.toDateString() === y.toDateString()) return "Yesterday, " + hh + ":" + mm;
+  return d.toLocaleDateString("en-GB", {day: "numeric", month: "short"}) + ", " + hh + ":" + mm;
+}
+/* Report categories: the panel form offers the demo labels, the
+   server accepts its own set — mapped here. */
+const REPORT_CATEGORY_MAP = {
+  "Absence / attendance": "other",
+  "Misconduct in room": "harassment",
+  "Spam / abuse": "abuse",
+  "Fake or duplicate account": "impersonation",
+  "Rule violation": "other",
+  "Other": "other"
+};
+const REPORT_CATEGORY_LABEL = {spam: "Spam", abuse: "Abuse", fraud: "Fraud", impersonation: "Impersonation", harassment: "Harassment", other: "Other"};
+const REPORT_STATUS_LABEL = {open: "Open", resolved_removed: "Account removed", dismissed: "Resolved"};
+/* Short display id for the staff tables (the server id is a long UUID). */
+function shortId(id) { return "ID " + String(id || "").slice(0, 8); }
+
 /* The six approved demo accounts — one per panel role. Sign-in is by
    Gmail (Sign in with Google) or phone number only, and checks this list
    (plus accounts approved in the panel this session); nobody else can
@@ -3192,7 +3397,7 @@ const PEOPLE = {
    shipped source. Their phone sign-in is verified server-side by the
    production backend instead; in this demo both Owners sign in by
    Gmail. To end the temporary access, delete this block and the
-   TEMP_OWNER lookups in findApproved / buildLoginAccounts. */
+   TEMP_OWNER lookups in buildLoginAccounts. */
 const TEMP_OWNER = {name:"Morshed Sarwar", username:"owner_temp", email:"morshedsarwar00@gmail.com", bio:"Temporary Owner · Controls all teams", id:"500101", seed:8};
 
 /* ================= demo data ================= */
@@ -3331,77 +3536,31 @@ function enterApp(person, role){
   try{ if(typeof showSkelIntro === "function") showSkelIntro(); }catch(err){ if(window.console) console.warn("showSkelIntro", err); }
   if(typeof maybeShowInstallBar === "function") setTimeout(maybeShowInstallBar, 1200);
 }
-/* Sign-in is approval-gated: only accounts the Staff Panel has approved
-   may enter. That means the six demo role accounts below, plus any
-   account a Manager/Assistant/Admin approves or creates in the panel
-   during this session. Everyone else is told to apply and wait. */
-function findApproved(email){
-  const em = email.toLowerCase();
-  if(state.removedEmails.some(x=>x.toLowerCase()===em)) return null;
-  if(TEMP_OWNER.email.toLowerCase()===em) return {person: TEMP_OWNER, role: "owner"};
-  const key = Object.keys(PEOPLE).find(k=>PEOPLE[k].email.toLowerCase()===em);
-  if(key) return {person: PEOPLE[key], role: key};
-  const extra = state.approvedExtra.find(a=>a.email.toLowerCase()===em);
-  if(extra) return {person: extra, role: extra.role};
-  return null;
-}
-function phoneDigits(v){ return String(v || "").replace(/\D/g, ""); }
-function phoneMatch(a, b){
-  const x = phoneDigits(a), y = phoneDigits(b);
-  return x.length >= 10 && y.length >= 10 && x.slice(-10) === y.slice(-10);
-}
-/* Phone sign-in in this static demo covers the placeholder demo numbers
-   below and panel-approved accounts. The two Owners' real mobile
-   numbers are intentionally absent — in any form — because a number
-   stored or checkable in shipped client code can be recovered from it;
-   the production backend verifies their numbers server-side. */
-function findApprovedPhone(num){
-  const key = Object.keys(PEOPLE).find(k=>PEOPLE[k].phone && phoneMatch(PEOPLE[k].phone, num) && !state.removedEmails.includes(PEOPLE[k].email));
-  if(key) return {person: PEOPLE[key], role: key};
-  const extra = state.approvedExtra.find(a=>a.phone && phoneMatch(a.phone, num));
-  if(extra) return {person: extra, role: extra.role};
-  return null;
-}
-function removedByPhone(num){
-  return Object.values(PEOPLE).some(p=>p.phone && phoneMatch(p.phone, num) && state.removedEmails.includes(p.email));
-}
-function fileSigninRequest(name, email, phone){
-  /* Owner panel setting: while new applications are Closed, no new
-     sign-in request is filed at all — the applicant is told so instead
-     of waiting for an approval that was never requested. */
-  if(!state.panelSettings.applicationsOpen) return false;
-  state.pending.unshift({name, email: email || "", phone: phone || "", role:"host", team: state.myTeam, time:"Just now"});
-  auditLog(name, "Sign-in request (" + (email || phone) + ") — waiting for panel approval");
-  return true;
-}
-/* ---- Sign in with Google: passwordless "Choose your account" ----
-   Tapping "Sign in with Google" opens a chooser in the shape of
-   Google's own account picker: a big "Choose your account" heading
-   with every Gmail account on this device listed under it — avatar,
-   name and Gmail address — and tapping a row signs straight in;
-   there is no password anywhere in this flow. The accounts this
-   device shows are the ones that can sign in to Im Live on it: the
-   demo role accounts, the temporary Owner, and any account the Staff
-   Panel approved or created this session (plus, through the "Use
-   another account" form below the list, any other approved Gmail —
-   typing it there and tapping "Continue without password" registers
-   it on this device and signs in at once). (A web page cannot read
-   the operating system's real Google accounts — the production
-   Android app uses the native Google account picker; this chooser is
-   the in-page equivalent for the accounts this device holds.)
-   The approval gate still applies — an account the Owner removed
-   never appears in the list and stays blocked, and a Gmail that is
-   not approved yet files a pending request for the Staff Panel
-   instead of entering.
-   One device holds at most 2 Im Live accounts: the first two distinct
-   Gmail accounts signed in on this device fill its two slots for the
-   session; while both slots are full, any other listed account is
-   shown dimmed with a "Device full" tag and tapping it explains the
-   limit. Signing out does NOT free a slot — the account stays
-   registered on this device, so either of the two can sign back in at
-   any time (see Switch account in the Profile menu and in Settings). */
+/* Sign-in is approval-gated by the LIVE SERVER, not by this page.
+   The old demo list (PEOPLE / TEMP_OWNER / approvedExtra /
+   removedEmails) no longer decides who may enter — it only feeds the
+   search directory and the demo phone numbers. A Gmail signs in by
+   calling POST /api/auth/login with its password; the server checks
+   the password, the approval status and the lockout, and returns the
+   account (role, team) that drives the app. An unregistered Gmail
+   registers through POST /api/auth/register, which files a pending
+   Host application for the Staff Panel. */
+/* ---- Sign in with Google: "Choose your account" + password ----
+   Tapping "Sign in with Google" opens the chooser: the Gmail accounts
+   signed in on this device (kept in localStorage, at most 2) are
+   listed, and tapping one — or typing a Gmail under "Use another
+   account" — opens the password step for that Gmail. The live server
+   signs in by Gmail + password: POST /api/auth/login. There is no
+   passwordless entry any more, and nothing on this page decides who
+   may enter — the server checks the password, the approval status
+   and the lockout. A Gmail with no account yet can register from the
+   same step (POST /api/auth/register): that files a pending Host
+   application, and the Staff Panel must approve it before the Gmail
+   can sign in. (A web page cannot read the operating system's real
+   Google accounts — the production Android app uses the native Google
+   account picker; this chooser is the in-page equivalent for the
+   accounts this device holds.) */
 const DEVICE_ACCOUNT_LIMIT = 2;
-let deviceAccounts = [];   /* emails registered on this device, this session */
 /* Live mirror of the Gmail field's contents, kept in step by the
    field's own input/change events: the Continue handler reads the
    field itself first and only falls back to this, so a typed Gmail is
@@ -3415,93 +3574,231 @@ let gEmailTyped = "";
   el.addEventListener("input", sync);
   el.addEventListener("change", sync);
 })();
-function deviceHas(email){ return deviceAccounts.some(x=>x.toLowerCase()===String(email || "").toLowerCase()); }
 function renderDeviceChooser(){
   const bar = $("deviceBar"), box = $("deviceAccounts");
   if(!box) return;
-  /* Every Gmail account on this device, in Google's chooser order of
-     importance: the temporary Owner first, then the role accounts,
-     then any account the Staff Panel approved this session. Removed
-     accounts are skipped (findApproved returns null for them), and
-     duplicates are listed once. Each row keeps data-dev-email +
-     devicePick, so the tap-rescue watcher and the approval gate in
-     devicePick work exactly as before. */
-  const seen = {}, list = [];
-  const add = (person, role)=>{
-    if(!person || !person.email) return;
-    const em = String(person.email).toLowerCase();
-    if(seen[em]) return; seen[em] = 1;
-    if(!findApproved(person.email)) return;
-    list.push({person, role});
-  };
-  add(TEMP_OWNER, "owner");
-  Object.keys(PEOPLE).forEach(role=>add(PEOPLE[role], role));
-  state.approvedExtra.forEach(a=>add(a, a.role));
+  /* The Gmail accounts signed in on THIS device (localStorage), in
+     the order they signed in. This list is not an approval list —
+     the server decides who may enter, after the password step. */
   const used = deviceAccounts.length, full = used >= DEVICE_ACCOUNT_LIMIT;
-  if(bar) bar.innerHTML = `📱 <span><b>All the Gmail accounts on this device</b> — tap one to sign in, no password needed. This device holds ${used} of ${DEVICE_ACCOUNT_LIMIT} Im Live accounts${full ? " (full)" : ""}.</span>`;
-  if(!list.length){
+  if(bar) bar.innerHTML = `📱 <span><b>Accounts on this device</b> — tap one, then enter its password. This device holds ${used} of ${DEVICE_ACCOUNT_LIMIT} Im Live accounts${full ? " (full)" : ""}.</span>`;
+  if(!deviceAccounts.length){
     box.innerHTML = `<p class="note" style="text-align:center; margin:10px 4px 4px">No Gmail account is available on this device yet.<br>Add one under “Use another account” below.</p>`;
     return;
   }
-  box.innerHTML = list.map(({person})=>{
-    const em = person.email;
-    const onDev = deviceHas(em);
-    const isFull = !onDev && full;
-    return `<button type="button" class="acctRow${isFull ? " devFull" : ""}" data-dev-email="${esc(em)}" onclick="devicePick('${esc(em)}')">
-      ${avHTML(person.name, 42, person.seed)}
-      <span class="aMeta"><b>${esc(person.name)}</b><span>${esc(em)}</span>${onDev ? `<span class="devTag">● On this device</span>` : (isFull ? `<span class="devFullTag">Device full — 2 accounts max</span>` : ``)}</span>
+  box.innerHTML = deviceAccounts.map(({email, name})=>{
+    const display = name || email.split("@")[0].replace(/[._]+/g, " ").replace(/\b\w/g, c=>c.toUpperCase());
+    let seed = 0; for(let i = 0; i < email.length; i++) seed = (seed + email.charCodeAt(i)) % 10;
+    return `<button type="button" class="acctRow" data-dev-email="${esc(email)}" onclick="devicePick('${esc(email)}')">
+      ${avHTML(display, 42, seed)}
+      <span class="aMeta"><b>${esc(display)}</b><span>${esc(email)}</span><span class="devTag">● On this device</span></span>
     </button>`;
   }).join("");
 }
+
 /* Tapping a chooser row — or Continuing with a typed Gmail — signs in
    through here: approved enters at once (registering the Gmail on
    this phone first if it is new and a slot is free), removed is
    blocked, unapproved files a pending request. No password is ever
    asked. */
+/* Tapping a chooser row — or Continuing with a typed Gmail — opens
+   the password step for that Gmail. The server, not this page,
+   decides whether the account may enter. */
 function devicePick(email){
   const em = String(email || "").trim().toLowerCase();
   const eEl = $("gErr"), mEl = $("gMsg");
   if(eEl) eEl.textContent = ""; if(mEl) mEl.textContent = "";
   if(!em) return false;
-  if(state.removedEmails.some(x=>x.toLowerCase()===em)){ if(eEl) eEl.textContent = "⛔ This account was removed by the Owner and can no longer sign in."; return false; }
-  const found = findApproved(em);
-  /* Owner panel setting: maintenance mode pauses sign-in for everyone
-     except the Owner, who must still be able to get in and turn it off. */
-  if(state.panelSettings.maintenanceMode && (!found || found.role!=="owner")){
-    if(eEl) eEl.textContent = "🛠 Im Live is under maintenance right now — sign-in is paused. Please try again shortly.";
-    return false;
-  }
-  if(!found) return googleUnapproved(em);
   if(!deviceHas(em) && deviceAccounts.length >= DEVICE_ACCOUNT_LIMIT){
     if(eEl) eEl.textContent = "📱 This device already has 2 Im Live accounts — the maximum for one phone. Sign in with an account already on this device, or use another phone.";
     return false;
   }
-  if(!deviceHas(em)) deviceAccounts.push(em);
-  enterApp(found.person, found.role);
+  openGooglePwStep(em, "login");
   return false;
 }
-function googleUnapproved(em){
-  const eEl = $("gErr"), mEl = $("gMsg");
-  const pend = state.pending.find(p=>p.email && p.email.toLowerCase()===em);
-  if(pend){ if(eEl) eEl.textContent = "⏳ This Gmail is still waiting for Staff Panel approval. Once the Owner, a Manager, Assistant or Admin approves it, you can sign in with it here — no password needed."; return false; }
-  const pretty = em.split("@")[0].replace(/[._]+/g, " ").replace(/\b\w/g, c=>c.toUpperCase());
-  if(!fileSigninRequest(pretty, em, "")){
-    if(eEl) eEl.textContent = "🚪 New account applications are closed right now — the Owner is not accepting sign-in requests. If you already have an approved account, sign in with it instead.";
+/* ---- Google password step (live server sign-in) ---- */
+let gPwEmail = "", gPwMode = "login"; /* "login" | "register" */
+function openGooglePwStep(email, mode){
+  gPwEmail = String(email || "").trim().toLowerCase();
+  gPwMode = mode === "register" ? "register" : "login";
+  if(gPwEmail === (window._gPwOpenFor || "")){
+    /* Already open for this Gmail — do not wipe a typed password
+       (the tap-rescue may call devicePick again). */
+    return;
+  }
+  window._gPwOpenFor = gPwEmail;
+  const emEl = $("gPwEmail"); if(emEl) emEl.textContent = gPwEmail;
+  const pw = $("gPw"); if(pw) pw.value = "";
+  const nm = $("gRegName"); if(nm) nm.value = "";
+  const pe = $("gPwErr"); if(pe) pe.textContent = "";
+  const pm = $("gPwMsg"); if(pm) pm.textContent = "";
+  applyGooglePwMode();
+  ["deviceBar","deviceAccounts","googleOther","gDeviceNote"].forEach(id=>{ const n = $(id); if(n) n.classList.add("hidden"); });
+  const step = $("gPwStep"); if(step) step.classList.remove("hidden");
+  setTimeout(()=>{ const p = $("gPw"); if(p) p.focus({preventScroll:true}); }, 80);
+}
+function applyGooglePwMode(){
+  const isReg = gPwMode === "register";
+  const t = $("gPwTitle"); if(t) t.textContent = isReg ? "Create an account" : "Sign in";
+  const b = $("gPwBtn"); if(b) b.textContent = isReg ? "Create account & Apply" : "Sign in";
+  const nf = $("gRegNameField"); if(nf) nf.style.display = isReg ? "" : "none";
+  const pw = $("gPw"); if(pw) pw.placeholder = isReg ? "Choose a password (8+ characters, letter + number)" : "Your Im Live password";
+  const link = $("gPwModeLink"); if(link) link.textContent = isReg ? "Already have an account? Sign in" : "New here? Create an account";
+}
+function toggleGooglePwMode(){
+  gPwMode = gPwMode === "register" ? "login" : "register";
+  const pe = $("gPwErr"); if(pe) pe.textContent = "";
+  const pm = $("gPwMsg"); if(pm) pm.textContent = "";
+  applyGooglePwMode();
+}
+function backToGoogleChooser(){
+  window._gPwOpenFor = "";
+  const step = $("gPwStep"); if(step) step.classList.add("hidden");
+  ["deviceBar","deviceAccounts","googleOther","gDeviceNote"].forEach(id=>{ const n = $(id); if(n) n.classList.remove("hidden"); });
+  renderDeviceChooser();
+}
+let gPwBusy = false; /* a sign-in is already in flight — the tap-rescue must not double-submit */
+async function doGooglePwSubmit(e){
+  if(e) e.preventDefault();
+  if(gPwBusy) return false;
+  const em = gPwEmail;
+  const pwEl = $("gPw"), pw = pwEl ? pwEl.value : "";
+  const pe = $("gPwErr"), pm = $("gPwMsg");
+  if(pe) pe.textContent = ""; if(pm) pm.textContent = "";
+  if(!em){ if(pe) pe.textContent = "Please pick an account first."; return false; }
+  if(!pw){ if(pe) pe.textContent = "Please enter the password."; if(pwEl) pwEl.focus(); return false; }
+  gPwBusy = true;
+  const btn = $("gPwBtn"); if(btn) btn.disabled = true;
+  try {
+    if(gPwMode === "register"){
+      /* New account: the server files a pending Host application.
+         Applications-closed is consulted from the cached panel
+         settings (GET /api/settings is Owner-only). */
+      if(!loadCachedSettings().applicationsOpen){
+        if(pe) pe.textContent = "🚪 New account applications are closed right now — the Owner is not accepting sign-in requests. If you already have an approved account, sign in with it instead.";
+        return false;
+      }
+      const nameEl = $("gRegName"), name = nameEl ? nameEl.value.trim() : "";
+      if(name.length < 2){ if(pe) pe.textContent = "Please enter your name (at least 2 characters)."; return false; }
+      const data = await apiFetch("/api/auth/register", {method: "POST", body: {email: em, password: pw, displayName: name}});
+      if(pm) pm.textContent = "🔒 " + (data.message || "Your application has been received. It is pending approval.");
+      return false;
+    }
+    const data = await apiFetch("/api/auth/login", {method: "POST", body: {email: em, password: pw}});
+    await apiEnterWithLogin(data);
+  } catch (err) {
+    if(err && err.status === 403){
+      if(pe) pe.textContent = apiUserMessage(err);
+    } else if(err && err.status === 401){
+      if(pe) pe.textContent = "Invalid email or password. If you don't have an account yet, tap “Create an account” below.";
+    } else {
+      if(pe) pe.textContent = apiUserMessage(err);
+    }
+  } finally {
+    if(btn) btn.disabled = false;
+    gPwBusy = false;
+  }
+  return false;
+}
+/* A successful server sign-in: store the tokens, remember this Gmail
+   on the device, and enter the app as the account the server
+   returned (role, team, status). The server already refused pending,
+   rejected and removed accounts, so anyone reaching here is approved.
+   Maintenance mode (cached settings) still keeps non-Owners out —
+   the Owner must be able to get in and turn it off. */
+async function apiEnterWithLogin(data){
+  const u = data.user;
+  if(!u || !u.email) throw new Error("The server did not return an account.");
+  if(u.status && u.status !== "approved") throw new Error("Your account is not approved yet.");
+  const cached = loadCachedSettings();
+  if(cached.maintenanceMode && u.role !== "owner"){
+    apiClearTokens();
+    backToGoogleChooser();
+    const eEl = $("gErr");
+    if(eEl) eEl.textContent = "🛠 Im Live is under maintenance right now — sign-in is paused. Please try again shortly.";
     return false;
   }
-  if(mEl) mEl.textContent = "🔒 This Gmail is not approved yet, so your sign-in request was sent to the Staff Panel. After approval, sign in here with the same Gmail — no password needed.";
+  apiSaveTokens(data.accessToken, data.refreshToken);
+  deviceRemember(u.email, u.display_name);
+  state.myTeam = u.team_id || "";
+  state.mustChangePassword = !!data.mustChangePassword;
+  enterApp(apiUserToPerson(u), u.role);
+  if(u.role === "owner"){
+    /* Owner: refresh the panel settings from the server (only the
+       Owner may read them) so the panel shows the real values. */
+    refreshPanelSettingsFromServer();
+  }
+  if(data.mustChangePassword) openPwChangeSheet();
+  return true;
+}
+/* Refresh the Owner panel settings from the live server (GET
+   /api/settings — Owner only). Keeps the panel and the sign-in gate
+   honest: the cached copy is only refreshed when the Owner reads it. */
+async function refreshPanelSettingsFromServer(){
+  try {
+    const data = await apiFetch("/api/settings");
+    applyServerSettings(data);
+    saveCachedSettings();
+  } catch (e) { /* settings stay on the cached copy; the panel still works */ }
+}
+/* Change password (server): POST /api/auth/change-password. Shown
+   when the server says the account must change its password
+   (mustChangePassword — e.g. a temporary password). "Remind me
+   later" closes it; the app stays usable. */
+function openPwChangeSheet(){
+  const e1 = $("pwChangeErr"), e2 = $("pwChangeMsg");
+  if(e1) e1.textContent = ""; if(e2) e2.textContent = "";
+  const c = $("pwCur"), n = $("pwNew");
+  if(c) c.value = ""; if(n) n.value = "";
+  openSheet("pwChangeSheet");
+}
+function closePwChangeSheet(){ closeSheet("pwChangeSheet"); }
+async function doChangePassword(e){
+  if(e) e.preventDefault();
+  const cur = $("pwCur") ? $("pwCur").value : "";
+  const nw = $("pwNew") ? $("pwNew").value : "";
+  const pe = $("pwChangeErr"), pm = $("pwChangeMsg");
+  if(pe) pe.textContent = ""; if(pm) pm.textContent = "";
+  if(!cur || !nw){ if(pe) pe.textContent = "Please enter both passwords."; return false; }
+  try {
+    await apiFetch("/api/auth/change-password", {method: "POST", body: {currentPassword: cur, newPassword: nw}});
+    state.mustChangePassword = false;
+    if(pm) pm.textContent = "✅ Password changed.";
+    setTimeout(closePwChangeSheet, 900);
+  } catch (err) {
+    if(pe) pe.textContent = apiUserMessage(err);
+  }
   return false;
 }
-/* "Use another account" + "Continue without password": the Gmail
-   typed here goes through the same gate as a chooser pick — approved
-   is registered on this phone and enters at once (within the
-   2-account device limit), removed is blocked, unapproved files a
-   pending request. No password is asked. The address is read at tap
-   time from the live field (the button is the form's submit button,
-   so a tap can never race a half-typed value); the gEmailTyped mirror
-   is only a fallback for webviews whose field read lags the typing —
-   a Gmail that is visibly typed must never trigger the "enter the
-   Gmail address first" error. */
+/* Restore a saved session (live server): if tokens from a previous
+   sign-in are stored, ask the server who they belong to. A valid
+   session enters the app; anything else (expired, revoked, server
+   down) leaves the sign-in screen exactly as it is. */
+async function restoreApiSession(){
+  if(!apiAccessToken && !apiRefreshToken) return;
+  try {
+    const me = await apiFetch("/api/auth/me");
+    if(me && me.email){
+      if(me.status && me.status !== "approved") throw new Error("not approved");
+      state.myTeam = me.team_id || "";
+      state.mustChangePassword = !!me.must_change_password;
+      enterApp(apiUserToPerson(me), me.role);
+      if(me.role === "owner") refreshPanelSettingsFromServer();
+      if(me.must_change_password) openPwChangeSheet();
+    }
+  } catch (e) {
+    apiClearTokens();
+  }
+}
+
+/* "Use another account" + "Continue": the Gmail typed here opens
+   the password step, exactly like tapping a chooser row — the live
+   server checks the password and the approval status. The address
+   is read at tap time from the live field (the button is the form's
+   submit button, so a tap can never race a half-typed value); the
+   gEmailTyped mirror is only a fallback for webviews whose field
+   read lags the typing — a Gmail that is visibly typed must never
+   trigger the "enter the Gmail address first" error. */
 function doGoogleOther(e){
   if(e) e.preventDefault();
   const emEl = $("gEmail");
@@ -3517,72 +3814,39 @@ function resetGooglePanel(){
   ["gErr","gMsg"].forEach(id=>{ const el = $(id); if(el) el.textContent = ""; });
   const em = $("gEmail"); if(em) em.value = "";
   gEmailTyped = "";
+  window._gPwOpenFor = "";
+  const step = $("gPwStep"); if(step) step.classList.add("hidden");
+  ["deviceBar","deviceAccounts","googleOther","gDeviceNote"].forEach(id=>{ const n = $(id); if(n) n.classList.remove("hidden"); });
 }
+
 /* Switch account (Profile menu / Settings): sign out and land straight
-   on the device chooser, where either account registered on this
-   device can be tapped to sign straight back in — no password. */
+   on the device chooser, where an account on this device can be
+   tapped and signed back in with its password. */
 function switchAccount(){
   signOut();
   toggleLoginPanel("google");
 }
-/* ---- Sign in with phone: number → verification code → in ---- */
-let phoneLogin = null;
+/* ---- Sign in with phone: NOT connected to the live server ----
+   The server keys accounts by email — there is no phone sign-in
+   endpoint — so the demo SMS code is gone. The panel explains this
+   and sends the user to Google sign-in. Nothing here can sign
+   anyone in. */
 function doPhoneSend(e){
-  e.preventDefault();
-  const raw = $("phNumber").value.trim();
-  $("phMsg").textContent = ""; $("phErr").textContent = "";
-  if(phoneDigits(raw).length < 10){ $("phErr").textContent = "Please enter a valid phone number with country code (e.g. +880 1XXX-XXXXXX)."; $("phNumber").focus(); return false; }
-  if(removedByPhone(raw)){ $("phErr").textContent = "⛔ This account was removed by the Owner and can no longer sign in."; return false; }
-  const found = findApprovedPhone(raw);
-  /* Owner panel setting: maintenance mode pauses phone sign-in too —
-     everyone except the Owner (the Owners sign in by Gmail here). */
-  if(state.panelSettings.maintenanceMode && (!found || found.role!=="owner")){
-    $("phErr").textContent = "🛠 Im Live is under maintenance right now — sign-in is paused. Please try again shortly.";
-    return false;
-  }
-  if(!found){
-    const pend = state.pending.find(p=>p.phone && phoneMatch(p.phone, raw));
-    if(pend){ $("phErr").textContent = "⏳ Your sign-in request is still waiting for Staff Panel approval. Once approved, this number can sign in."; return false; }
-    if(!fileSigninRequest("Phone guest ····" + phoneDigits(raw).slice(-4), "", raw)){
-      $("phErr").textContent = "🚪 New account applications are closed right now — the Owner is not accepting sign-in requests. If you already have an approved account, sign in with it instead.";
-      return false;
-    }
-    $("phMsg").textContent = "🔒 This number is not approved yet — your sign-in request was sent to the Staff Panel. After approval you can sign in with this number.";
-    return false;
-  }
-  phoneLogin = {code: String(Math.floor(100000 + Math.random()*900000)), person: found.person, role: found.role, number: raw};
-  $("phoneStep1").classList.add("hidden");
-  $("phoneStep2").classList.remove("hidden");
-  $("phSms").innerHTML = `📩 <b>SMS · ${esc(raw)}</b><br>Your Im Live verification code is <b>${phoneLogin.code}</b>. Never share it with anyone.<br><span style="opacity:.75">(Demo message — no real SMS is sent.)</span>`;
-  $("phErr2").textContent = ""; $("phCode").value = "";
-  setTimeout(()=>$("phCode").focus({preventScroll:true}), 80);
+  if(e) e.preventDefault();
+  $("phMsg").textContent = "";
+  $("phErr").textContent = "📱 Phone sign-in is not connected to the live server yet — the server signs in by Gmail. Please use “Sign in with Google”.";
   return false;
 }
 function doPhoneVerify(e){
-  e.preventDefault();
-  if(!phoneLogin){ resetPhoneStep(); return false; }
-  const v = $("phCode").value.trim();
-  if(v !== phoneLogin.code){ $("phErr2").textContent = "That code does not match — check the message above and try again."; $("phCode").focus(); return false; }
-  /* The 2-account device limit covers phone sign-in too: a verified
-     number signs its account in ON this phone, so the account takes
-     one of the phone's two slots (keyed by its Gmail, the same key the
-     chooser uses) — a third distinct account is refused here exactly
-     as it is in the Google chooser, instead of slipping past the rule
-     through the phone door. Registering it also means it appears in
-     the device chooser for Switch account afterwards. */
-  const pl = phoneLogin;
-  const em = (pl.person.email || "").toLowerCase();
-  if(em && !deviceHas(em) && deviceAccounts.length >= DEVICE_ACCOUNT_LIMIT){
-    $("phErr2").textContent = "📱 This device already has 2 Im Live accounts — the maximum for one phone. Sign in with an account already on this device, or use another phone.";
-    return false;
-  }
-  phoneLogin = null;
-  if(em && !deviceHas(em)) deviceAccounts.push(em);
-  enterApp(pl.person, pl.role);
+  if(e) e.preventDefault();
+  /* The verification step is never reached — doPhoneSend no longer
+     sends a code. Kept so a stray tap cannot sign anyone in. */
+  resetPhoneStep();
   return false;
 }
+
+
 function resetPhoneStep(){
-  phoneLogin = null;
   const s2 = $("phoneStep2"), s1 = $("phoneStep1");
   if(s2) s2.classList.add("hidden");
   if(s1) s1.classList.remove("hidden");
@@ -3592,9 +3856,17 @@ function phonePick(role){
   buildLoginAccounts();
   resetPhoneStep();
   $("phNumber").value = PEOPLE[role].phone;
-  $("phMsg").textContent = "Number filled — tap “Send verification code” to get your code.";
+  $("phMsg").textContent = "Number filled — but phone sign-in is not connected to the live server yet. Please use “Sign in with Google”.";
 }
 function signOut(){
+  /* Best-effort server sign-out (revokes the refresh token), then
+     clear the local session. The device's Gmail list is kept — those
+     accounts stay on this device for the chooser. */
+  try {
+    if(apiRefreshToken) apiFetch("/api/auth/logout", {method: "POST", body: {refreshToken: apiRefreshToken}}).catch(()=>{});
+  } catch (e) {}
+  apiClearTokens();
+  state.mustChangePassword = false;
   leaveRoom(true);
   state.user = null; state.room = null;
   $("appShell").classList.add("hidden");
@@ -3607,6 +3879,7 @@ function signOut(){
   const lc = $("loginCol"); if(lc){ lc.classList.remove("panelOpen"); lc.scrollTop = 0; }
   closeSub(); closeStaff();
 }
+
 
 
 /* ================= navigation ================= */
@@ -3837,7 +4110,11 @@ function capBlockMsg(teamKey, roleKey){
 }
 /* Visible summary of the per-country limits, with the live seat counts
    for every team the signed-in role may see (Owner: all teams). */
+/* Visible summary of the per-country limits, with the live seat counts
+   for every team the signed-in role may see (Owner: all teams). */
 function countryLimitsHTML(){
+  const keys = visibleTeamKeys();
+  if(!keys.length) return `<div class="secHead"><h2 style="font-size:16px">🌍 Per-country seat limits</h2></div><div class="emptyBox">No team yet — the Owner creates a Manager to start a team.</div>`;
   const cell = (k, rk)=>{
     const cap = ROLE_CAPS[rk], n = teamRoleCount(k, rk);
     return isFinite(cap)
@@ -3845,8 +4122,9 @@ function countryLimitsHTML(){
       : `${ROLE_LABEL[rk]} <b>${n}</b> · unlimited`;
   };
   return `<div class="secHead"><h2 style="font-size:16px">🌍 Per-country seat limits</h2></div>` +
-    visibleTeamKeys().map(k=>`<div class="logBox" style="margin-bottom:8px"><div class="logRow" style="border:none"><b>${esc(state.teams[k].name)}</b><span>${["manager","assistant","admin","agent","host"].map(rk=>cell(k, rk)).join(" · ")}</span><span>Rule for each country: Manager max 1 · Assistant max 1 · Admin max 4 · Agent (Agency) &amp; Host unlimited.</span></div></div>`).join("");
+    keys.map(k=>`<div class="logBox" style="margin-bottom:8px"><div class="logRow" style="border:none"><b>${esc(state.teams[k].name)}</b><span>${["manager","assistant","admin","agent","host"].map(rk=>cell(k, rk)).join(" · ")}</span><span>Rule for each country: Manager max 1 · Assistant max 1 · Admin max 4 · Agent (Agency) &amp; Host unlimited.</span></div></div>`).join("");
 }
+
 function syncProfile(){
   const u = state.user; if(!u) return;
   $("meAvatar").outerHTML = avHTML(u.name, 84, u.seed, `id="meAvatar" style="width:84px;height:84px"`);
@@ -5733,7 +6011,93 @@ function claimReward(){
 }
 
 /* ================= staff panel ================= */
-function openStaff(){ renderStaff(); $("staffPage").classList.add("open"); }
+/* ---- Staff Panel: live data from the server ----
+   The panel no longer renders the demo seed lists. openStaff() loads
+   the real teams, staff, reports and audit log from the API and
+   rebuilds state from them; every mutation re-loads and re-renders.
+   If the server cannot be reached, the panel shows an error and a
+   retry — it never shows the demo seed data as if it were real. */
+let staffLoading = false, staffLoadError = "";
+let lastTempPw = null; /* {name, email, pw} — a generated temp password, shown once */
+async function refreshStaffData(){
+  const [teamsRes, staffRes, reportsRes, auditRes] = await Promise.all([
+    apiFetch("/api/teams"),
+    apiFetch("/api/staff?limit=100"),
+    apiFetch(state.role === "owner" ? "/api/reports?limit=100" : "/api/reports/mine?limit=100"),
+    apiFetch("/api/audit?limit=100")
+  ]);
+  const teams = {};
+  (teamsRes.data || []).forEach(t=>{ teams[t.id] = {name: t.name, staff: []}; });
+  const staffList = staffRes.data || [];
+  const byId = {};
+  staffList.forEach(u=>{ byId[u.id] = u; });
+  state.staffById = byId;
+  /* Resolve an added_by UUID to the person's name (for the "Added by"
+     label and the Manager downline). If the person is not in this
+     account's visible list, the label is left blank. */
+  const nameOf = id => (id && byId[id]) ? byId[id].display_name : "";
+  staffList.forEach(u=>{
+    /* Only approved accounts sit in a team table — pending, rejected
+       and removed accounts are not team members yet (or any more),
+       and the seat counts must count approved seats only. */
+    if(u.status !== "approved") return;
+    const teamId = u.team_id || "";
+    if(teamId && teams[teamId]){
+      teams[teamId].staff.push({name: u.display_name, role: u.role, id: u.id, email: u.email, addedBy: nameOf(u.added_by), addedById: u.added_by || "", teamId});
+    }
+  });
+  state.teams = teams;
+  /* Pending applications = staff whose status is 'pending' (the
+     server lists every account, approved or waiting). */
+  state.pending = staffList.filter(u=>u.status === "pending").map(u=>({
+    id: u.id, name: u.display_name, email: u.email, role: u.role,
+    team: u.team_id || "", addedById: u.added_by || "", time: apiTime(u.created_at)
+  }));
+  /* Reports: resolve the reporter / reported UUIDs to names. */
+  state.staffReports = (reportsRes.data || []).map(r=>{
+    const reporter = byId[r.reporter_id], reported = byId[r.reported_id];
+    const teamName = (reported && reported.team_id && teams[reported.team_id]) ? teams[reported.team_id].name : "—";
+    return {
+      id: r.id,
+      from: reporter ? `${reporter.display_name} (${ROLE_LABEL[reporter.role] || reporter.role})` : shortId(r.reporter_id),
+      team: teamName, teamKey: reported ? (reported.team_id || "") : "",
+      about: reported ? `${reported.display_name} (${ROLE_LABEL[reported.role] || reported.role})` : shortId(r.reported_id),
+      aboutName: reported ? reported.display_name : "", aboutRole: reported ? reported.role : "", aboutId: r.reported_id || "",
+      category: REPORT_CATEGORY_LABEL[r.category] || r.category,
+      reason: r.information || "",
+      evidence: r.evidence_filename ? `${r.evidence_filename} (private storage — Owner only)` : "No evidence file attached",
+      status: REPORT_STATUS_LABEL[r.status] || r.status,
+      time: apiTime(r.created_at)
+    };
+  });
+  state.audit = (auditRes.data || []).map(a=>{
+    const det = a.details;
+    const detStr = det ? (typeof det === "string" ? det : JSON.stringify(det)) : "";
+    return {
+      who: a.actor_email ? `${a.actor_email} (${ROLE_LABEL[a.actor_role] || a.actor_role || ""})` : "System",
+      what: a.action + (a.target_email ? ` — ${a.target_email}` : "") + (detStr ? ` · ${detStr}` : ""),
+      time: apiTime(a.created_at),
+      actorEmail: a.actor_email || "", targetEmail: a.target_email || "", teamId: a.team_id || ""
+    };
+  });
+}
+async function openStaff(){
+  $("staffPage").classList.add("open");
+  staffLoading = true; staffLoadError = "";
+  $("staffBody").innerHTML = `<div class="emptyBox" style="margin-top:14px">⏳ Loading the Staff Panel from the live server…</div>`;
+  try {
+    await refreshStaffData();
+    staffLoading = false;
+    renderStaff();
+  } catch (e) {
+    staffLoading = false;
+    staffLoadError = apiUserMessage(e);
+    $("staffBody").innerHTML = `<div class="roleBanner" style="background:linear-gradient(120deg,#5b1a1a,#8a2f2f)"><span style="font-size:26px">⚠️</span><span><b>Could not load the Staff Panel.</b><span>${esc(staffLoadError)}</span></span></div>
+    <button class="btn" style="width:100%; margin-top:10px" onclick="openStaff()">↻ Try again</button>
+    <p class="note" style="margin-top:8px">The demo staff lists are not shown here — only live data from the server.</p>`;
+  }
+}
+
 function closeStaff(){ $("staffPage").classList.remove("open"); }
 function auditLog(who, what){
   const now = new Date();
@@ -5743,52 +6107,61 @@ function auditLog(who, what){
    A Manager — and everyone below — is scoped to their own team only:
    no names, no lists, no information from any other team. */
 function visibleTeamKeys(){
-  return state.role==="owner" ? Object.keys(state.teams) : [state.myTeam];
+  if(state.role==="owner") return Object.keys(state.teams);
+  return (state.myTeam && state.teams[state.myTeam]) ? [state.myTeam] : [];
 }
-function myTeamName(){ return state.teams[state.myTeam].name; }
+function myTeamName(){ const t = state.teams[state.myTeam]; return t ? t.name : "No team yet"; }
+
 /* What "team" means for a Manager: ONLY the people that Manager added —
    the Assistant → Admin → Agent → Host in their own downline (people they
    added directly, plus people those people added under them). Anyone the
    Manager did not add is not their team member and stays invisible. */
-function myChainNames(teamKey){
-  const t = state.teams[teamKey]; if(!t) return new Set([state.user.name]);
-  const names = new Set([state.user.name]);
+/* What "team" means for a Manager: ONLY the people that Manager added —
+   the Assistant → Admin → Agent → Host in their own downline (people they
+   added directly, plus people those people added under them). Anyone the
+   Manager did not add is not their team member and stays invisible.
+   Computed from added_by UUIDs (the server's record), not names. */
+function myChainIds(teamKey){
+  const t = state.teams[teamKey]; if(!t) return new Set([state.user.id]);
+  const ids = new Set([state.user.id]);
   let grew = true;
   while(grew){
     grew = false;
-    t.staff.forEach(s=>{ if(s.addedBy && names.has(s.addedBy) && !names.has(s.name)){ names.add(s.name); grew = true; } });
+    t.staff.forEach(s=>{ if(s.addedById && ids.has(s.addedById) && !ids.has(s.id)){ ids.add(s.id); grew = true; } });
   }
-  return names;
+  return ids;
 }
+
 function teamStaffTable(teamKey){
-  const t = state.teams[teamKey];
+  const t = state.teams[teamKey]; if(!t) return "";
   const tagBg = {owner:"#3a2703", manager:"#8a5f14", assistant:"#0e7d86", admin:"#5b3a8a", agent:"#0e8a5f", host:"#b3541e"};
   const canReport = ["manager","assistant","admin","agent"].includes(state.role);
   let list = t.staff;
   if(state.role==="manager"){
-    const chain = myChainNames(teamKey);
-    list = t.staff.filter(s=>chain.has(s.name));
+    const chain = myChainIds(teamKey);
+    list = t.staff.filter(s=>chain.has(s.id));
   }
   const rows = list.map(s=>{
     let action = `<span class="note">—</span>`;
-    if(s.name===state.user.name){
+    if(s.id===state.user.id){
       action = `<span class="pill">You</span>`;
     } else if(state.role==="owner"){
       /* Only the Owner can remove an account — every other role reports. */
-      action = `<button class="btn small danger" onclick="removeStaff('${teamKey}','${esc(s.name)}')">Remove</button>`;
+      action = `<button class="btn small danger" onclick="removeStaff('${esc(s.id)}')">Remove</button>`;
     } else if(canReport){
-      action = `<button class="btn small" onclick="reportPerson('${teamKey}','${esc(s.name)}','${s.role}')">Report to Official</button>`;
+      action = `<button class="btn small" onclick="reportPerson('${esc(s.id)}')">Report to Official</button>`;
       if(state.role==="assistant") action += ` <button class="btn small ghost" onclick="toast('Support chat opened with ${esc(s.name)} (demo).')">Assist</button>`;
     }
-    return `<tr><td><b>${esc(s.name)}</b><br><span class="note">${esc(s.id)}${s.addedBy ? ` · Added by ${esc(s.addedBy)}` : ""}</span></td><td><span class="tag" style="background:${tagBg[s.role] || "#6d5c33"}">${ROLE_LABEL[s.role]}</span></td><td>${action}</td></tr>`;
+    return `<tr><td><b>${esc(s.name)}</b><br><span class="note">${esc(shortId(s.id))}${s.addedBy ? ` · Added by ${esc(s.addedBy)}` : ""}</span></td><td><span class="tag" style="background:${tagBg[s.role] || "#6d5c33"}">${ROLE_LABEL[s.role]}</span></td><td>${action}</td></tr>`;
   }).join("");
   return `<div class="secHead"><h2 style="font-size:16px">${esc(t.name)}${state.role==="manager" ? " — my team" : ""}</h2></div>
   ${state.role==="manager" ? `<p class="note" style="margin:0 0 8px">Only the people <b>you added</b> are your team members — the Assistant, Admin, Agent and Host in your line below. Anyone you did not add is not on your team and is not shown to you.</p>` : ""}
   <div style="overflow-x:auto"><table class="team">
     <tr><th>Person</th><th>Role</th><th>Action</th></tr>
-    ${rows}
+    ${rows || `<tr><td colspan="3"><span class="note">No one in this team yet.</span></td></tr>`}
   </table></div>`;
 }
+
 function renderStaff(){
   $("staffPageRole").textContent = ROLE_LABEL[state.role];
   const role = state.role;
@@ -5810,13 +6183,22 @@ function renderStaff(){
   html += countryLimitsHTML();
   /* ---- pending applications (approval gate for sign-in) ---- */
   if(canApprove){
-    const pend = state.pending.map((p,i)=>({p,i})).filter(x=> role==="owner" || x.p.team===state.myTeam);
+    /* Unclaimed self-registrations (no team yet) are visible to every
+       approver — approving one claims it into the approver's team
+       (the Owner picks the team). */
+    const pend = state.pending.filter(p=> role==="owner" || !p.team || p.team===state.myTeam);
     html += `<div class="secHead" style="margin-top:0"><h2 style="font-size:16px">⏳ Waiting for approval (${pend.length})</h2></div>`;
     if(pend.length){
-      html += pend.map(({p,i})=>`<div class="logBox" style="margin-bottom:8px"><div class="logRow" style="border:none">
-        <b>${esc(p.name)}</b> — wants a <b>${ROLE_LABEL[p.role]}</b> account · ${esc(state.teams[p.team].name)}<span>${esc(p.email || p.phone || "")} · Applied ${esc(p.time)} · Cannot sign in until approved</span>
-        <span style="margin-top:6px; display:flex; gap:6px"><button class="btn small" onclick="approveApplication(${i})">✓ Approve</button><button class="btn small danger" onclick="rejectApplication(${i})">Reject</button></span>
-      </div></div>`).join("");
+      html += pend.map(p=>{
+        const teamName = (p.team && state.teams[p.team]) ? state.teams[p.team].name : "No team yet — joins the approver's team";
+        const teamSel = (role==="owner" && !p.addedById && p.role!=="manager")
+          ? `<div class="field" style="margin-top:6px"><label>Team for this account</label><select id="apprTeam-${esc(p.id)}">${Object.keys(state.teams).map(k=>`<option value="${k}">${esc(state.teams[k].name)}</option>`).join("")}</select></div>` : "";
+        return `<div class="logBox" style="margin-bottom:8px"><div class="logRow" style="border:none">
+        <b>${esc(p.name)}</b> — wants a <b>${ROLE_LABEL[p.role]}</b> account · ${esc(teamName)}<span>${esc(p.email || "")} · Applied ${esc(p.time)} · Cannot sign in until approved</span>
+        ${teamSel}
+        <span style="margin-top:6px; display:flex; gap:6px"><button class="btn small" onclick="approveApplication('${esc(p.id)}')">✓ Approve</button><button class="btn small danger" onclick="rejectApplication('${esc(p.id)}')">Reject</button></span>
+      </div></div>`;
+      }).join("");
     } else {
       html += `<div class="emptyBox">No applications waiting for ${esc(scopeNote)}.</div>`;
     }
@@ -5827,9 +6209,11 @@ function renderStaff(){
       ? `<div class="field"><label>Team</label><select id="scTeam">${Object.keys(state.teams).map(k=>`<option value="${k}">${esc(state.teams[k].name)}</option>`).join("")}</select></div>`
       : `<p class="note" style="margin:0 0 8px">Team: <b>${esc(myTeamName())}</b> — your accounts are created in your own team only. You cannot create accounts for another team.</p>`;
     html += `<div class="secHead"><h2 style="font-size:16px">${role==="owner" ? "Create account — appoint a Manager or any role below" : "Create account"}</h2></div>
+    ${lastTempPw ? `<div class="logBox" style="margin-bottom:10px; border:1px solid #c99327"><div class="logRow" style="border:none"><b>🔑 Temporary password for ${esc(lastTempPw.name)}</b><span>${esc(lastTempPw.email)} — share this password with them <b>once</b>. It is shown only here, and they must change it on first sign-in.</span><span style="font-size:18px; font-weight:700; letter-spacing:1px">${esc(lastTempPw.pw)}</span><span style="margin-top:6px"><button class="btn small ghost" onclick="dismissTempPw()">Dismiss</button></span></div></div>` : ""}
     <form onsubmit="return staffCreate(event)" style="margin-bottom:14px">
       <div class="field"><label>Full name</label><input id="scName" required placeholder="e.g. Tanvir Hasan"></div>
       <div class="field"><label>Gmail (their sign-in)</label><input id="scEmail" type="email" required placeholder="name@gmail.com"></div>
+      <div class="field"><label>Password (optional — leave empty and the server makes a temporary one)</label><input id="scPassword" type="password" autocomplete="new-password" placeholder="8+ characters, letter + number"></div>
       <div class="field"><label>Role</label><select id="scRole">${canCreate.map(r=>{ const cap = ROLE_CAPS[r]; const full = role!=="owner" && seatFull(state.myTeam, r); return `<option value="${r}" ${full ? "disabled" : ""}>${ROLE_LABEL[r]}${isFinite(cap) ? ` — max ${cap} per country` : " — unlimited"}${full ? " · seat full" : ""}</option>`; }).join("")}</select></div>
       ${teamField}
       <button class="btn" type="submit" style="width:100%">Create &amp; Approve Account</button>
@@ -5847,21 +6231,22 @@ function renderStaff(){
   if(role==="owner"){
     html += `<div class="secHead"><h2 style="font-size:16px">📩 Reports to Official (${state.staffReports.filter(r=>r.status==="Open").length} open)</h2></div>
     ${state.staffReports.map(r=>`<div class="logBox" style="margin-bottom:8px"><div class="logRow" style="border:none">
-      <b>#${r.id} · Report about ${esc(r.about)}</b><span>Reported by ${esc(r.from)} · ${esc(r.team)} · ${esc(r.time)} · Status: ${esc(r.status)}</span>
+      <b>${esc(shortId(r.id))} · Report about ${esc(r.about)}</b><span>Reported by ${esc(r.from)} · ${esc(r.team)} · ${esc(r.time)} · Status: ${esc(r.status)}</span>
       <div style="margin-top:6px"><span class="pill">${esc(r.category || "Report")}</span></div>
       <p style="margin:7px 0 0; font-size:13.5px; line-height:1.55"><b>Information:</b> ${esc(r.reason)}</p>
       <p style="margin:4px 0 0; font-size:13px; color:var(--ink2)">📎 Evidence: ${esc(r.evidence)}</p>
-      ${r.status==="Open" ? `<span style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap">${r.aboutName ? `<button class="btn small danger" onclick="ownerRemoveFromReport(${r.id})">Remove this account</button>` : ""}<button class="btn small ghost" onclick="resolveReport(${r.id})">Dismiss — keep account</button></span>`
+      ${r.status==="Open" ? `<span style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap">${r.aboutName ? `<button class="btn small danger" onclick="ownerRemoveFromReport('${esc(r.id)}')">Remove this account</button>` : ""}<button class="btn small ghost" onclick="resolveReport('${esc(r.id)}')">Dismiss — keep account</button></span>`
         : `<span class="pill" style="margin-top:7px">${r.status==="Account removed" ? "⛔ Account removed by Owner" : "✓ Decided — account kept"}</span>`}
     </div></div>`).join("")}`;
   } else if(["manager","assistant","admin","agent"].includes(role)){
-    let reportable = state.teams[state.myTeam].staff.filter(s=>s.name!==state.user.name);
+    const myTeamStaff = state.teams[state.myTeam] ? state.teams[state.myTeam].staff : [];
+    let reportable = myTeamStaff.filter(s=>s.id!==state.user.id);
     if(role==="manager"){
-      const chain = myChainNames(state.myTeam);
-      reportable = reportable.filter(s=>chain.has(s.name));
+      const chain = myChainIds(state.myTeam);
+      reportable = reportable.filter(s=>chain.has(s.id));
     }
     const opts = reportable
-      .map(s=>`<option value="${state.myTeam}::${esc(s.name)}::${s.role}" ${reportPreset===state.myTeam+"::"+s.name+"::"+s.role ? "selected" : ""}>${esc(s.name)} (${ROLE_LABEL[s.role]}) — ${esc(myTeamName())}</option>`).join("");
+      .map(s=>`<option value="${esc(s.id)}" ${reportPreset===s.id ? "selected" : ""}>${esc(s.name)} (${ROLE_LABEL[s.role]}) — ${esc(myTeamName())}</option>`).join("");
     html += `<div class="secHead"><h2 style="font-size:16px">Report to Official</h2></div>
     <p class="note" style="margin:0 0 10px">You cannot remove anyone yourself — only the Owner can. If someone in your team must be removed, send this report: the Owner reads your information and evidence, then decides.</p>
     <form id="reportForm" onsubmit="return staffReportUp(event)">
@@ -5872,16 +6257,16 @@ function renderStaff(){
       <div class="field"><label>Information box — write everything about this person</label>
         <textarea id="rpReason" rows="4" required placeholder="What did they do? When? Who saw it? Write the full information for the Owner…"></textarea></div>
       <div class="field"><label>Upload evidence (screenshot, photo, document)</label>
-        <input id="rpEvidenceFile" type="file" accept="image/*,.pdf,.txt,.doc,.docx" onchange="reportFilePicked(this)">
-        <p class="note" id="rpFileName" style="margin-top:5px">No file chosen yet — you can still send the report without evidence.</p></div>
+        <input id="rpEvidenceFile" type="file" accept="image/*,.pdf,video/mp4,video/webm,video/quicktime" onchange="reportFilePicked(this)">
+        <p class="note" id="rpFileName" style="margin-top:5px">No file chosen yet — you can still send the report without evidence. Photo, PDF or video, max 10 MB.</p></div>
       <button class="btn" type="submit" style="width:100%">📩 Send Report to Official</button>
-      <p class="note" style="margin-top:8px">Only the Owner can see this report and its evidence. The file goes to private storage in the full build; in this demo its name is recorded with the report.</p>
+      <p class="note" style="margin-top:8px">Only the Owner can see this report and its evidence. The file goes to the server's private evidence storage (Owner only).</p>
     </form>`;
     const mine = state.staffReports.filter(r=>r.from.indexOf(state.user.name)===0);
     if(mine.length){
       html += `<div class="secHead"><h2 style="font-size:16px">My reports to the Official</h2></div>
       ${mine.map(r=>`<div class="logBox" style="margin-bottom:8px"><div class="logRow" style="border:none">
-        <b>#${r.id} · ${esc(r.about)}</b> — ${esc(r.category || "Report")}<span>${esc(r.time)} · Evidence: ${esc(r.evidence)}</span>
+        <b>${esc(shortId(r.id))} · ${esc(r.about)}</b> — ${esc(r.category || "Report")}<span>${esc(r.time)} · Evidence: ${esc(r.evidence)}</span>
         <span class="pill" style="margin-top:5px">${r.status==="Open" ? "⏳ Waiting for the Owner" : r.status==="Account removed" ? "⛔ Owner removed the account" : "✓ Owner decided — account kept"}</span>
       </div></div>`).join("")}`;
     }
@@ -5900,127 +6285,217 @@ function renderStaff(){
   /* ---- audit log: Owner sees everything; a Manager sees only their
      own team's audit entries — never another team's information. ---- */
   if(role==="owner" || role==="manager"){
-    const myStaffNames = role==="manager" ? Array.from(myChainNames(state.myTeam)) : state.teams[state.myTeam].staff.map(s=>s.name);
-    const entries = role==="owner" ? state.audit
-      : state.audit.filter(a=> a.what.includes(myTeamName()) || myStaffNames.some(n=>a.who.includes(n) || a.what.includes(n)));
+    const myTeamStaff = state.teams[state.myTeam] ? state.teams[state.myTeam].staff : [];
+    let entries = state.audit;
+    if(role==="manager"){
+      const chain = myChainIds(state.myTeam);
+      const chainEmails = new Set([state.user.email].concat(myTeamStaff.filter(s=>chain.has(s.id)).map(s=>s.email)));
+      entries = state.audit.filter(a=> a.teamId===state.myTeam || chainEmails.has(a.actorEmail) || chainEmails.has(a.targetEmail));
+    }
     html += `<div class="secHead"><h2 style="font-size:16px">Audit log${role==="manager" ? " — your team only" : ""}</h2></div>
     <div class="logBox">${entries.length ? entries.map(a=>`<div class="logRow"><b>${esc(a.who)}</b> — ${esc(a.what)}<span>${esc(a.time)}</span></div>`).join("") : `<div class="logRow">No audit entries for your team yet.</div>`}</div>`;
   }
-  html += `<p class="note" style="margin-top:10px">Demo scope rules mirror the production design: NestJS API checks + Supabase Row Level Security enforce the same approval gate, per-country seat limits, Owner-only removal, Owner-only panel settings, report-to-Official flow and team boundaries server-side.</p>`;
+  html += `<p class="note" style="margin-top:10px">Live panel — this data comes from the production server (NestJS API + Supabase). The server enforces the approval gate, per-country seat limits, Owner-only removal, Owner-only panel settings, the report-to-Official flow and team boundaries.</p>`;
   $("staffBody").innerHTML = html;
 }
 
-function staffCreate(e){
+async function staffCreate(e){
   e.preventDefault();
   const name = $("scName").value.trim(), email = $("scEmail").value.trim(), newRole = $("scRole").value;
-  const teamKey = state.role==="owner" ? $("scTeam").value : state.myTeam;
+  const pw = $("scPassword") ? $("scPassword").value : "";
+  const teamKey = state.role==="owner" ? ($("scTeam") ? $("scTeam").value : "") : state.myTeam;
   if(!CREATES[state.role].includes(newRole)){ toast("⛔ Your role cannot create a " + ROLE_LABEL[newRole] + "."); return false; }
-  if(findApproved(email)){ toast("That email already has an approved account."); return false; }
-  const t = state.teams[teamKey];
   /* Per-country seat limits: in each country (team) — Manager max 1,
      Assistant max 1, Admin max 4; Agent and Host are unlimited. A full
      seat cannot be created until it frees up. */
-  if(seatFull(teamKey, newRole)){
+  if(teamKey && seatFull(teamKey, newRole)){
     toast(capBlockMsg(teamKey, newRole));
     return false;
   }
-  const id = "ST-" + teamKey + (10 + t.staff.length + 1);
-  t.staff.push({name, role:newRole, id, addedBy: state.user.name});
-  state.pending = state.pending.filter(p=>p.email.toLowerCase()!==email.toLowerCase());
-  state.approvedExtra.push({name, username: email.split("@")[0], email, bio: ROLE_LABEL[newRole] + " · " + t.name, id: String(520200 + state.approvedExtra.length * 7 + Math.floor(Math.random()*5)), seed: Math.floor(Math.random()*10), role:newRole});
-  auditLog(`${state.user.name} (${ROLE_LABEL[state.role]})`, `Created ${ROLE_LABEL[newRole]} account for ${name} in ${t.name} — approved, can sign in`);
-  renderStaff(); toast(`${name} created as ${ROLE_LABEL[newRole]} — approved, they can sign in now.`);
+  const body = {email, displayName: name, role: newRole};
+  if(pw) body.password = pw;
+  if(state.role === "owner"){
+    if(newRole === "manager"){
+      /* A Manager gets a brand-new team from the server — no existing
+         team is picked for them. */
+    } else {
+      if(!teamKey){ toast("⛔ Pick a team first — a non-Manager role needs an existing team. Create a Manager first if there is no team yet."); return false; }
+      body.teamId = teamKey;
+    }
+  }
+  /* Non-Owners create in their own team — the server assigns it. */
+  const btn = e.target ? e.target.querySelector("button[type=submit]") : null;
+  if(btn) btn.disabled = true;
+  try {
+    const created = await apiFetch("/api/staff", {method: "POST", body});
+    const createdId = created.user && created.user.id;
+    if(created.tempPassword){
+      lastTempPw = {name, email, pw: created.tempPassword};
+    }
+    /* Created accounts are 'pending' on the server — approve at once
+       so the "Create & Approve" button keeps its promise. (Known
+       server quirk: approving a Manager creates a second team — the
+       create step already made one. Reported, not worked around.) */
+    if(createdId){
+      try { await apiFetch(`/api/staff/${createdId}/approve`, {method: "POST", body: {}}); }
+      catch (apErr) { toast("Created, but approval failed: " + apiUserMessage(apErr)); }
+    }
+    await refreshStaffData();
+    renderStaff();
+    toast(`${name} created as ${ROLE_LABEL[newRole]} — approved, they can sign in now.${created.tempPassword ? " Their temporary password is shown above — share it once." : ""}`);
+  } catch (err) {
+    toast(apiUserMessage(err));
+  } finally {
+    if(btn) btn.disabled = false;
+  }
   return false;
 }
-function approveApplication(i){
-  const p = state.pending[i]; if(!p) return;
+
+async function approveApplication(id){
+  const p = state.pending.find(x=>x.id===id); if(!p) return;
   /* Per-country seat limits apply to approvals too: a full seat cannot
      be approved until it frees up — the application stays waiting. */
-  if(seatFull(p.team, p.role)){ toast(capBlockMsg(p.team, p.role)); return; }
-  state.pending.splice(i,1);
-  const t = state.teams[p.team];
-  t.staff.push({name:p.name, role:p.role, id:"ST-" + p.team + (10 + t.staff.length + 1), addedBy: state.user.name});
-  state.approvedExtra.push({name:p.name, username: p.email ? p.email.split("@")[0] : "guest" + phoneDigits(p.phone || "").slice(-4), email:p.email, phone: p.phone || "", bio: ROLE_LABEL[p.role] + " · " + t.name, id: String(520300 + Math.floor(Math.random()*400)), seed: Math.floor(Math.random()*10), role:p.role});
-  auditLog(`${state.user.name} (${ROLE_LABEL[state.role]})`, `Approved ${p.name}'s application — ${ROLE_LABEL[p.role]} account in ${t.name}, can now sign in`);
-  renderStaff(); toast(`✅ ${p.name} approved as ${ROLE_LABEL[p.role]} — they can sign in now.`);
+  const teamKey = p.team || (state.role === "owner" ? "" : state.myTeam);
+  if(teamKey && seatFull(teamKey, p.role)){ toast(capBlockMsg(teamKey, p.role)); return; }
+  const body = {};
+  if(state.role === "owner" && !p.addedById && p.role !== "manager"){
+    /* Unclaimed self-registration: the Owner must pick a team. */
+    const sel = $("apprTeam-" + id);
+    const teamId = sel ? sel.value : "";
+    if(!teamId){ toast("⛔ Pick a team for this account first."); return; }
+    body.teamId = teamId;
+  }
+  try {
+    await apiFetch(`/api/staff/${id}/approve`, {method: "POST", body});
+    await refreshStaffData();
+    renderStaff();
+    toast(`✅ ${p.name} approved as ${ROLE_LABEL[p.role]} — they can sign in now.`);
+  } catch (err) {
+    toast(apiUserMessage(err));
+  }
 }
-function rejectApplication(i){
-  const p = state.pending[i]; if(!p) return;
-  state.pending.splice(i,1);
-  auditLog(`${state.user.name} (${ROLE_LABEL[state.role]})`, `Rejected ${p.name}'s application for a ${ROLE_LABEL[p.role]} account`);
-  renderStaff(); toast(`Application from ${p.name} rejected — they cannot sign in.`);
+
+async function rejectApplication(id){
+  const p = state.pending.find(x=>x.id===id); if(!p) return;
+  try {
+    await apiFetch(`/api/staff/${id}/reject`, {method: "POST", body: {}});
+    await refreshStaffData();
+    renderStaff();
+    toast(`Application from ${p.name} rejected — they cannot sign in.`);
+  } catch (err) {
+    toast(apiUserMessage(err));
+  }
 }
+
 /* Removal is Owner-only. Removing a staff member also ends their
    sign-in: if their email matches a demo or panel-created account, it
    is blocked and dropped from the approved list. */
-function removeStaff(teamKey, name){
+/* Removal is Owner-only. The server ends the account's sign-in. */
+async function removeStaff(id){
   if(state.role!=="owner"){ toast("⛔ Only the Owner can remove an account. Report this person to the Owner instead."); return; }
-  const t = state.teams[teamKey]; if(!t) return;
-  const entry = t.staff.find(s=>s.name===name); if(!entry) return;
-  t.staff = t.staff.filter(s=>s.name!==name);
-  Object.values(PEOPLE).forEach(p=>{ if(p.name===name) state.removedEmails.push(p.email); });
-  state.approvedExtra = state.approvedExtra.filter(a=>{
-    if(a.name===name){ state.removedEmails.push(a.email); return false; }
-    return true;
-  });
-  auditLog(`${state.user.name} (Owner)`, `Removed ${ROLE_LABEL[entry.role]} account ${name} from ${t.name} — they can no longer sign in`);
-  renderStaff(); toast(`⛔ ${name} removed by the Owner — they can no longer sign in.`);
+  const person = state.staffById && state.staffById[id];
+  const name = person ? person.display_name : shortId(id);
+  try {
+    await apiFetch(`/api/staff/${id}`, {method: "DELETE"});
+    await refreshStaffData();
+    renderStaff();
+    toast(`⛔ ${name} removed by the Owner — they can no longer sign in.`);
+  } catch (err) {
+    toast(apiUserMessage(err));
+  }
 }
-function ownerRemoveFromReport(id){
-  const r = state.staffReports.find(x=>x.id===id); if(!r || !r.aboutName) return;
-  const teamKey = r.teamKey || Object.keys(state.teams).find(k=>state.teams[k].staff.some(s=>s.name===r.aboutName));
-  if(teamKey) removeStaff(teamKey, r.aboutName);
-  r.status = "Account removed";
-  renderStaff(); toast(`Report #${id} decided — account removed by the Owner.`);
+
+async function ownerRemoveFromReport(id){
+  if(state.role!=="owner"){ toast("⛔ Only the Owner decides reports."); return; }
+  try {
+    await apiFetch(`/api/reports/${id}/decide`, {method: "POST", body: {decision: "remove"}});
+    await refreshStaffData();
+    renderStaff();
+    toast(`Report decided — account removed by the Owner.`);
+  } catch (err) {
+    toast(apiUserMessage(err));
+  }
 }
-function toggleSetting(key){
+
+async function toggleSetting(key){
   if(state.role!=="owner"){ toast("⛔ Only the Owner can change panel settings."); return; }
-  state.panelSettings[key] = !state.panelSettings[key];
-  auditLog(`${state.user.name} (${ROLE_LABEL[state.role]})`, `Changed panel setting: ${key==="applicationsOpen" ? "New account applications" : "Maintenance mode"} → ${state.panelSettings[key] ? "On" : "Off"}`);
-  renderStaff(); toast("Panel setting updated ✓");
+  const field = key === "applicationsOpen" ? "newApplicationsOpen" : "maintenanceMode";
+  const next = !state.panelSettings[key];
+  try {
+    const data = await apiFetch("/api/settings", {method: "PUT", body: {[field]: next}});
+    applyServerSettings(data);
+    saveCachedSettings();
+    renderStaff();
+    toast("Panel setting updated ✓");
+  } catch (err) {
+    toast(apiUserMessage(err));
+  }
 }
-function resolveReport(id){
-  const r = state.staffReports.find(x=>x.id===id); if(r) r.status = "Resolved";
-  auditLog(`${state.user.name} (Owner)`, `Decided report #${id} — dismissed, account kept`);
-  renderStaff(); toast(`Report #${id} dismissed — the account stays.`);
+
+async function resolveReport(id){
+  if(state.role!=="owner"){ toast("⛔ Only the Owner decides reports."); return; }
+  try {
+    await apiFetch(`/api/reports/${id}/decide`, {method: "POST", body: {decision: "dismiss"}});
+    await refreshStaffData();
+    renderStaff();
+    toast(`Report dismissed — the account stays.`);
+  } catch (err) {
+    toast(apiUserMessage(err));
+  }
 }
+
 /* ---- report-to-Owner flow (Manager → Agent) ---- */
 let reportPreset = "";
-function reportPerson(teamKey, name, roleKey){
-  reportPreset = teamKey + "::" + name + "::" + roleKey;
+function reportPerson(id){
+  reportPreset = id;
   renderStaff();
   setTimeout(()=>{
     const f = $("reportForm");
     if(f) f.scrollIntoView({behavior:"smooth", block:"start"});
     const d = $("rpReason"); if(d) d.focus({preventScroll:true});
   }, 60);
-  toast(`Report form ready — write the information about ${name} for the Official.`);
+  const person = state.staffById && state.staffById[id];
+  toast(`Report form ready — write the information about ${person ? person.display_name : "this person"} for the Official.`);
 }
+
 function reportFilePicked(input){
   const el = $("rpFileName"); if(!el) return;
   el.textContent = input.files && input.files.length
     ? `📎 Attached: ${input.files[0].name} — it will be sent to the Owner with this report.`
     : "No file chosen yet — you can still send the report without evidence.";
 }
-function staffReportUp(e){
+async function staffReportUp(e){
   e.preventDefault();
-  const parts = ($("rpAbout").value || "").split("::");
-  const teamKey = parts[0] || state.myTeam, aboutName = parts[1] || "", aboutRole = parts[2] || "host";
+  const reportedId = $("rpAbout").value || "";
   const category = $("rpCategory").value;
   const reason = $("rpReason").value.trim();
-  if(!aboutName){ toast("Pick the person this report is about."); return false; }
+  if(!reportedId){ toast("Pick the person this report is about."); return false; }
   if(!reason){ toast("Write the information for the Owner in the information box."); return false; }
   const fileInput = $("rpEvidenceFile");
-  const fileName = (fileInput && fileInput.files && fileInput.files.length) ? fileInput.files[0].name : "";
-  const id = state.staffReports.reduce((m,r)=>Math.max(m,r.id),0) + 1;
-  state.staffReports.unshift({id, from: `${state.user.name} (${ROLE_LABEL[state.role]})`, team: state.teams[teamKey].name, teamKey,
-    about: `${aboutName} (${ROLE_LABEL[aboutRole]})`, aboutName, aboutRole, category, reason,
-    evidence: fileName ? `${fileName} (private storage — Owner only)` : "No evidence file attached", status:"Open", time:"Just now"});
-  auditLog(`${state.user.name} (${ROLE_LABEL[state.role]})`, `Reported ${aboutName} (${ROLE_LABEL[aboutRole]}) to the Owner — ${category}${fileName ? ", evidence: " + fileName : ""}`);
-  reportPreset = "";
-  renderStaff(); toast("Report sent to the Official 📩 Only the Owner can decide.");
+  const file = (fileInput && fileInput.files && fileInput.files.length) ? fileInput.files[0] : null;
+  if(file && file.size > 10 * 1024 * 1024){ toast("⛔ The evidence file is larger than 10 MB — please attach a smaller file."); return false; }
+  const fd = new FormData();
+  fd.append("reportedId", reportedId);
+  fd.append("category", REPORT_CATEGORY_MAP[category] || "other");
+  fd.append("information", reason);
+  if(file) fd.append("evidence", file);
+  const btn = e.target ? e.target.querySelector("button[type=submit]") : null;
+  if(btn) btn.disabled = true;
+  try {
+    await apiFetch("/api/reports", {method: "POST", form: fd});
+    reportPreset = "";
+    await refreshStaffData();
+    renderStaff();
+    toast("Report sent to the Official 📩 Only the Owner can decide.");
+  } catch (err) {
+    toast(apiUserMessage(err));
+  } finally {
+    if(btn) btn.disabled = false;
+  }
   return false;
 }
+function dismissTempPw(){ lastTempPw = null; renderStaff(); }
+
 function deniedHTML(){
   return `<div class="deniedBox">⛔ <b>Access denied.</b> Row Level Security: your account is scoped to your own team only. This attempt has been written to the audit log.</div>`;
 }
@@ -6149,6 +6624,7 @@ function renderAll(){
   cStart();
 }
 renderAll();
+restoreApiSession();
 </script>
 <script>
 /* Boot watchdog — deliberately a separate tiny script: if the main app
@@ -6204,9 +6680,10 @@ setTimeout(function(){
   }, true);
 })();
 /* Sign-in step rescue — same independence rules as above (plain ES5, no
-   helpers from the main script). Google sign-in is a passwordless
-   device account chooser: tapping an account row signs straight in,
-   and the "Continue without password" button and the two phone step
+   helpers from the main script). Google sign-in is a device account
+   chooser plus a password step: tapping an account row (or the
+   "Continue" button) opens the password step, and the password
+   button signs in through the live server; the two phone step
    buttons work through their handlers. On some
    phone webviews a tap never reaches the button's own handler, so the
    card just sits there. This watches those taps: if shortly after a
@@ -6232,8 +6709,11 @@ setTimeout(function(){
     }, true);
   }
   watch("gOtherBtn",
-    function(){ return !shown(el("authScreen")) || !!txt("gErr") || !!txt("gMsg"); },
+    function(){ return !shown(el("authScreen")) || shown(el("gPwStep")) || !!txt("gErr") || !!txt("gMsg"); },
     "doGoogleOther");
+  watch("gPwBtn",
+    function(){ return !shown(el("authScreen")) || !!txt("gPwErr") || !!txt("gPwMsg") || (typeof gPwBusy !== "undefined" && gPwBusy); },
+    "doGooglePwSubmit");
   watch("phSendBtn",
     function(){ return !shown(el("phoneStep1")) || !!txt("phErr") || !!txt("phMsg"); },
     "doPhoneSend");
@@ -6254,6 +6734,7 @@ setTimeout(function(){
     if(!email) return;
     setTimeout(function(){
       if(!shown(el("authScreen"))) return; /* the tap worked */
+      if(shown(el("gPwStep"))) return; /* the password step opened — the tap worked */
       if(txt("gErr") || txt("gMsg")) return; /* a message explains the stay */
       callHandler("devicePick", email);
     }, 400);
