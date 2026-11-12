@@ -205,8 +205,8 @@ h1,h2,h3{margin:0}
 #googlePanel .chooserSub b{color:#6d28a8}
 #googlePanel .chooserNoPw{display:block; font-size:13.5px; color:#a67c00; margin-top:2px}
 #googlePanel .deviceBar{background:none; border:none; border-radius:0; padding:0 6px 6px; justify-content:center; text-align:center; color:var(--ink2)}
-/* Brief gold flash on the official Google button when "Use another
-   account" points the user at it (see doGoogleOther): the outline
+/* Brief gold flash on the official Google button when a chooser row
+   points the user at it (see devicePick): the outline
    fades out on its own; the class is removed after ~2.6s. */
 #gisWrap.gisFlash{border-radius:999px; outline:3px solid #f5b301; outline-offset:4px; animation:gisFlashFade 2.4s ease-out forwards}
 @keyframes gisFlashFade{0%,55%{outline-color:#f5b301; box-shadow:0 0 0 6px rgba(245,179,1,.35)}100%{outline-color:transparent; box-shadow:0 0 0 0 rgba(245,179,1,0)}}
@@ -2446,12 +2446,12 @@ button{touch-action:manipulation; -webkit-tap-highlight-color:transparent}
          Google's own picker shape: only the Gmail accounts that have
          actually signed in on THIS device (kept in localStorage, at
          most 2) are listed (avatar, name, address) under a big
-         "Choose your account" heading. Tapping one opens the password
-         step for that Gmail — the live server signs in by Gmail +
-         password. A Gmail that is not listed can be typed under "Use
-         another account" and Continued. No other person's Gmail is
-         ever listed here. At most 2 Im Live accounts can live on one
-         device. -->
+         "Choose your account" heading. Tapping one signs in through
+         Google — passwordless, no typing. A Gmail that is not listed
+         is used through the official Google button above, which opens
+         Google's own chooser with every Google account on this
+         browser. No other person's Gmail is ever listed here. At most
+         2 Im Live accounts can live on one device. -->
     <div id="googlePanel" class="loginPanel hidden">
       <div class="lpHead chooserHead">
         <button type="button" class="lpBack" onclick="backToHero()" aria-label="Back to sign-in options">‹</button>
@@ -2460,9 +2460,9 @@ button{touch-action:manipulation; -webkit-tap-highlight-color:transparent}
       </div>
       <!-- Official Google Identity Services button (passwordless): GIS
            renders its own "Sign in with Google" button into #gisBtn
-           below, but only once a real Web Client ID is configured.
-           Until then #gisWrap stays hidden and the device chooser +
-           password sign-in below is the way in. -->
+           below. Tapping it opens Google's own account chooser with
+           every Google account on this browser — that is how a Gmail
+           not listed below is used. No typing, no password. -->
       <div id="gisWrap" class="hidden" style="margin:12px 0 2px; display:flex; justify-content:center">
         <div id="gisBtn"></div>
       </div>
@@ -2471,12 +2471,6 @@ button{touch-action:manipulation; -webkit-tap-highlight-color:transparent}
       <div id="deviceAccounts"></div>
       <div class="err" id="gErr"></div>
       <div class="okmsg" id="gMsg"></div>
-      <div class="lpDivider"><span>Use another account</span></div>
-      <form id="googleOther" novalidate onsubmit="return doGoogleOther(event)">
-        <div class="field"><label for="gEmail">Gmail address</label><input id="gEmail" type="email" placeholder="you@gmail.com" autocomplete="email" oninput="document.getElementById('gErr').textContent=''"></div>
-        <button class="btn" id="gOtherBtn" type="submit" style="width:100%">Continue</button>
-      </form>
-      <p class="note" id="gDeviceNote" style="text-align:center; margin-top:8px">One device can hold at most 2 Im Live accounts.</p>
       <!-- Password step (live server sign-in): after picking a Gmail, the
            account's password is asked here — the server checks it. A
            Gmail with no account yet can register from this step instead:
@@ -3653,9 +3647,8 @@ function enterApp(person, role){
    The cover button first tries Google's own account picker (see
    coverGoogleSignIn); the panel itself lists the Gmail accounts
    signed in on this device (kept in localStorage, at most 2), and
-   tapping one — or typing a Gmail under "Use another account" —
-   points at the official Google button above, which opens Google's
-   chooser with every Google account on this browser. Google sign-in
+   tapping one points at the official Google button above, which opens
+   Google's chooser with every Google account on this browser. Google sign-in
    is passwordless: the ID token goes to POST /api/auth/google, and
    the server checks the approval status and the lockout — nothing on
    this page decides who may enter. A Gmail with no account yet files
@@ -3665,19 +3658,6 @@ function enterApp(person, role){
    app uses the native Google account picker; Google's own chooser is
    the in-page equivalent.) */
 const DEVICE_ACCOUNT_LIMIT = 2;
-/* Live mirror of the Gmail field's contents, kept in step by the
-   field's own input/change events: the Continue handler reads the
-   field itself first and only falls back to this, so a typed Gmail is
-   never lost to a stale read (the false "Please enter the Gmail
-   address first" error). */
-let gEmailTyped = "";
-(function(){
-  const el = document.getElementById("gEmail");
-  if(!el) return;
-  const sync = ()=>{ gEmailTyped = el.value || ""; };
-  el.addEventListener("input", sync);
-  el.addEventListener("change", sync);
-})();
 function renderDeviceChooser(){
   const bar = $("deviceBar"), box = $("deviceAccounts");
   if(!box) return;
@@ -3691,7 +3671,7 @@ function renderDeviceChooser(){
   const used = deviceAccounts.length, full = used >= DEVICE_ACCOUNT_LIMIT;
   if(bar) bar.innerHTML = `📱 <span><b>All the Gmail accounts on this device</b> — tap one to sign in, no password needed. This device holds ${used} of ${DEVICE_ACCOUNT_LIMIT} Im Live accounts${full ? " (full)" : ""}.</span>`;
   if(!deviceAccounts.length){
-    box.innerHTML = `<p class="note" style="text-align:center; margin:10px 4px 4px">No account has signed in on this device yet.<br>Add one under “Use another account” below.</p>`;
+    box.innerHTML = `<p class="note" style="text-align:center; margin:10px 4px 4px">No account has signed in on this device yet.<br>Tap the Google button above to sign in — your account will appear here.</p>`;
     return;
   }
   box.innerHTML = deviceAccounts.map(({email, name})=>{
@@ -3704,8 +3684,7 @@ function renderDeviceChooser(){
   }).join("");
 }
 
-/* Tapping a chooser row signs in through Google — exactly like
-   Continuing with a typed Gmail (doGoogleOther): the user is pointed
+/* Tapping a chooser row signs in through Google: the user is pointed
    at the official Google button above, which opens Google's own
    account chooser with every Google account on this browser. No
    password is ever asked. The tapped Gmail is kept only as a hint;
@@ -3720,8 +3699,7 @@ function devicePick(email){
     return false;
   }
   /* Passwordless: make sure the Google button is rendered, then point
-     the user at it — same action as doGoogleOther. No password step
-     is opened from here. */
+     the user at it. No password step is opened from here. */
   try{ initGoogleSignIn(); }catch(err){ if(window.console) console.warn("initGoogleSignIn", err); }
   if(mEl) mEl.textContent = "Tap the Google button above to pick from all your Google accounts — no Im Live password needed.";
   const wrap = $("gisWrap");
@@ -3754,7 +3732,7 @@ function openGooglePwStep(email, mode){
   const pe = $("gPwErr"); if(pe) pe.textContent = "";
   const pm = $("gPwMsg"); if(pm) pm.textContent = "";
   applyGooglePwMode();
-  ["deviceBar","deviceAccounts","googleOther","gDeviceNote","gisWrap","gisNote"].forEach(id=>{ const n = $(id); if(n) n.classList.add("hidden"); });
+  ["deviceBar","deviceAccounts","gisWrap","gisNote"].forEach(id=>{ const n = $(id); if(n) n.classList.add("hidden"); });
   const step = $("gPwStep"); if(step) step.classList.remove("hidden");
   setTimeout(()=>{ const p = $("gPw"); if(p) p.focus({preventScroll:true}); }, 80);
 }
@@ -3776,7 +3754,7 @@ function toggleGooglePwMode(){
 function backToGoogleChooser(){
   window._gPwOpenFor = "";
   const step = $("gPwStep"); if(step) step.classList.add("hidden");
-  ["deviceBar","deviceAccounts","googleOther","gDeviceNote"].forEach(id=>{ const n = $(id); if(n) n.classList.remove("hidden"); });
+  ["deviceBar","deviceAccounts"].forEach(id=>{ const n = $(id); if(n) n.classList.remove("hidden"); });
   if(typeof gisRendered !== "undefined" && gisRendered){ ["gisWrap","gisNote"].forEach(id=>{ const n = $(id); if(n) n.classList.remove("hidden"); }); }
   renderDeviceChooser();
 }
@@ -3987,58 +3965,11 @@ async function restoreApiSession(){
   }
 }
 
-/* "Use another account" + "Continue": typing a Gmail here must NEVER
-   lead to a password step — sign-in is passwordless, and this website
-   cannot list the Gmails on the device (no website can). The typed
-   Gmail is validated and kept only as a hint. The user is pointed at
-   the official Google button above (#gisWrap): tapping it opens
-   Google's own account chooser (accounts.google.com) listing ALL
-   Google accounts signed in to that browser — that chooser is the
-   only place all Gmails appear. The button is scrolled into view and
-   briefly highlighted with a gold flash. The password step is NOT
-   reachable from here at all, nor from device-chooser rows
-   (devicePick does the same Google-first action); openGooglePwStep
-   stays in the file only as a future fallback. The address is
-   read at tap time from the live field (the button is the form's
-   submit button, so a tap can never race a half-typed value); the
-   gEmailTyped mirror is only a fallback for webviews whose field
-   read lags the typing — a Gmail that is visibly typed must never
-   trigger the "enter the Gmail address first" error. */
-function doGoogleOther(e){
-  if(e) e.preventDefault();
-  const emEl = $("gEmail");
-  let raw = emEl ? (emEl.value || "") : "";
-  if(!raw.trim() && gEmailTyped) raw = gEmailTyped;
-  const em = raw.trim().toLowerCase();
-  const mEl = $("gMsg"), eEl = $("gErr");
-  if(mEl) mEl.textContent = ""; if(eEl) eEl.textContent = "";
-  if(!em){ if(eEl) eEl.textContent = "Please enter the Gmail address first."; if(emEl) emEl.focus(); return false; }
-  if(!/^[^\s@]+@gmail\.com$/.test(em)){ if(eEl) eEl.textContent = "That is not a Gmail address — sign-in works with Gmail (…@gmail.com) or a phone number only."; if(emEl) emEl.focus(); return false; }
-  /* Passwordless: make sure the Google button is rendered, then point
-     the user at it — it opens Google's own chooser with every Google
-     account on this browser. No password step is opened from here. */
-  try{ initGoogleSignIn(); }catch(err){ if(window.console) console.warn("initGoogleSignIn", err); }
-  if(mEl) mEl.textContent = "Tap the Google button above to pick from all your Google accounts — no Im Live password needed.";
-  const wrap = $("gisWrap");
-  if(wrap){
-    try{ wrap.classList.remove("hidden"); }catch(err){}
-    try{ wrap.scrollIntoView({behavior:"smooth", block:"center"}); }catch(err){}
-    try{
-      wrap.classList.remove("gisFlash");
-      void wrap.offsetWidth; /* restart the flash if tapped twice */
-      wrap.classList.add("gisFlash");
-      setTimeout(function(){ try{ wrap.classList.remove("gisFlash"); }catch(err){} }, 2600);
-    }catch(err){ if(window.console) console.warn("gisFlash", err); }
-  }
-  return false;
-}
 function resetGooglePanel(){
   ["gErr","gMsg"].forEach(id=>{ const el = $(id); if(el) el.textContent = ""; });
-  const em = $("gEmail"); if(em) em.value = "";
-  gEmailTyped = "";
   window._gPwOpenFor = "";
   const step = $("gPwStep"); if(step) step.classList.add("hidden");
-  ["deviceBar","deviceAccounts","googleOther","gDeviceNote"].forEach(id=>{ const n = $(id); if(n) n.classList.remove("hidden"); });
+  ["deviceBar","deviceAccounts"].forEach(id=>{ const n = $(id); if(n) n.classList.remove("hidden"); });
   if(typeof gisRendered !== "undefined" && gisRendered){ ["gisWrap","gisNote"].forEach(id=>{ const n = $(id); if(n) n.classList.remove("hidden"); }); }
 }
 
@@ -6932,9 +6863,6 @@ setTimeout(function(){
       }, 400);
     }, true);
   }
-  watch("gOtherBtn",
-    function(){ return !shown(el("authScreen")) || shown(el("gPwStep")) || !!txt("gErr") || !!txt("gMsg"); },
-    "doGoogleOther");
   watch("gPwBtn",
     function(){ return !shown(el("authScreen")) || !!txt("gPwErr") || !!txt("gPwMsg") || (typeof gPwBusy !== "undefined" && gPwBusy); },
     "doGooglePwSubmit");
