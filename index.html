@@ -204,6 +204,11 @@ h1,h2,h3{margin:0}
 #googlePanel .chooserSub{display:block; font-size:13.5px; color:var(--ink2); margin-top:3px}
 #googlePanel .chooserSub b{color:#6d28a8}
 #googlePanel .deviceBar{background:none; border:none; border-radius:0; padding:0 6px 6px; justify-content:center; text-align:center; color:var(--ink2)}
+/* Brief gold flash on the official Google button when "Use another
+   account" points the user at it (see doGoogleOther): the outline
+   fades out on its own; the class is removed after ~2.6s. */
+#gisWrap.gisFlash{border-radius:999px; outline:3px solid #f5b301; outline-offset:4px; animation:gisFlashFade 2.4s ease-out forwards}
+@keyframes gisFlashFade{0%,55%{outline-color:#f5b301; box-shadow:0 0 0 6px rgba(245,179,1,.35)}100%{outline-color:transparent; box-shadow:0 0 0 0 rgba(245,179,1,0)}}
 #deviceAccounts{border-top:1px solid var(--line)}
 #deviceAccounts .acctRow{border-bottom:1px solid var(--line); border-radius:0; padding:11px 6px}
 #deviceAccounts .acctRow:last-child{border-bottom:none}
@@ -3896,20 +3901,22 @@ async function restoreApiSession(){
 }
 
 /* "Use another account" + "Continue": typing a Gmail here must NEVER
-   lead straight to a password step — sign-in is passwordless. The
-   Gmail is validated, then Google's own account picker (One Tap) is
-   opened: the user picks a Google account, Google verifies it, and
-   handleGoogleCredential signs in with the returned ID token — no Im
-   Live password is ever asked. Only if Google's picker cannot be
-   shown (GIS not configured, script unavailable, or the user closes
-   the pop-up) does the password step appear, as a fallback for
-   accounts that actually have an Im Live password. The address is
+   lead to a password step — sign-in is passwordless, and this website
+   cannot list the Gmails on the device (no website can). The typed
+   Gmail is validated and kept only as a hint. The user is pointed at
+   the official Google button above (#gisWrap): tapping it opens
+   Google's own account chooser (accounts.google.com) listing ALL
+   Google accounts signed in to that browser — that chooser is the
+   only place all Gmails appear. The button is scrolled into view and
+   briefly highlighted with a gold flash. The password step is NOT
+   reachable from here at all; it stays reachable only from
+   device-chooser rows (devicePick) for accounts that already signed
+   in on this device and have an Im Live password. The address is
    read at tap time from the live field (the button is the form's
    submit button, so a tap can never race a half-typed value); the
    gEmailTyped mirror is only a fallback for webviews whose field
    read lags the typing — a Gmail that is visibly typed must never
    trigger the "enter the Gmail address first" error. */
-let _gOtherPwFallbackTimer = null;
 function doGoogleOther(e){
   if(e) e.preventDefault();
   const emEl = $("gEmail");
@@ -3920,33 +3927,22 @@ function doGoogleOther(e){
   if(mEl) mEl.textContent = ""; if(eEl) eEl.textContent = "";
   if(!em){ if(eEl) eEl.textContent = "Please enter the Gmail address first."; if(emEl) emEl.focus(); return false; }
   if(!/^[^\s@]+@gmail\.com$/.test(em)){ if(eEl) eEl.textContent = "That is not a Gmail address — sign-in works with Gmail (…@gmail.com) or a phone number only."; if(emEl) emEl.focus(); return false; }
-  if(_gOtherPwFallbackTimer){ clearTimeout(_gOtherPwFallbackTimer); _gOtherPwFallbackTimer = null; }
-  /* Passwordless path first: Google's account picker (One Tap). */
-  if(gisConfigured() && typeof google !== "undefined" && google.accounts && google.accounts.id){
-    try{ initGoogleSignIn(); }catch(err){ if(window.console) console.warn("initGoogleSignIn", err); }
+  /* Passwordless: make sure the Google button is rendered, then point
+     the user at it — it opens Google's own chooser with every Google
+     account on this browser. No password step is opened from here. */
+  try{ initGoogleSignIn(); }catch(err){ if(window.console) console.warn("initGoogleSignIn", err); }
+  if(mEl) mEl.textContent = "Tap the Google button above to pick from all your Google accounts — no Im Live password needed.";
+  const wrap = $("gisWrap");
+  if(wrap){
+    try{ wrap.classList.remove("hidden"); }catch(err){}
+    try{ wrap.scrollIntoView({behavior:"smooth", block:"center"}); }catch(err){}
     try{
-      if(mEl) mEl.textContent = "Choose your Google account in the Google pop-up — no Im Live password needed.";
-      google.accounts.id.prompt(function(notification){
-        let noPrompt = false;
-        try{ noPrompt = !notification || notification.isNotDisplayed() || notification.isSkippedMoment() || notification.isDismissedMoment(); }
-        catch(err){ noPrompt = true; }
-        if(!noPrompt) return; /* picker is showing — wait for the user to pick an account */
-        /* Picker did not appear or was closed: give the credential
-           callback a moment to fire first (it sets gisBusy), then
-           fall back to the password step for password accounts. */
-        _gOtherPwFallbackTimer = setTimeout(function(){
-          _gOtherPwFallbackTimer = null;
-          if(typeof gisBusy !== "undefined" && gisBusy) return; /* Google sign-in is in flight — do not fall back */
-          if(mEl) mEl.textContent = ""; if(eEl) eEl.textContent = "";
-          openGooglePwStep(em, "login");
-        }, 700);
-      });
-      return false;
-    }catch(err){ if(window.console) console.warn("google prompt", err); /* fall through to the password fallback */ }
+      wrap.classList.remove("gisFlash");
+      void wrap.offsetWidth; /* restart the flash if tapped twice */
+      wrap.classList.add("gisFlash");
+      setTimeout(function(){ try{ wrap.classList.remove("gisFlash"); }catch(err){} }, 2600);
+    }catch(err){ if(window.console) console.warn("gisFlash", err); }
   }
-  /* Fallback (GIS unavailable): password step, for accounts that
-     actually have an Im Live password. */
-  openGooglePwStep(em, "login");
   return false;
 }
 function resetGooglePanel(){
