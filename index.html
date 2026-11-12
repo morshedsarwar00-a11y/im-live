@@ -3613,9 +3613,9 @@ function renderDeviceChooser(){
      list or any hardcoded Gmail. Only a Gmail that actually signed
      in on this device (via the live server) is ever listed here.
      This list is not an approval list — the server decides who may
-     enter, after the password step. */
+     enter, after Google sign-in. */
   const used = deviceAccounts.length, full = used >= DEVICE_ACCOUNT_LIMIT;
-  if(bar) bar.innerHTML = `📱 <span><b>Accounts signed in on this device</b> — tap one, then enter its password. This device holds ${used} of ${DEVICE_ACCOUNT_LIMIT} Im Live accounts${full ? " (full)" : ""}.</span>`;
+  if(bar) bar.innerHTML = `📱 <span><b>Accounts signed in on this device</b> — tap one to sign in with Google — no password needed. This device holds ${used} of ${DEVICE_ACCOUNT_LIMIT} Im Live accounts${full ? " (full)" : ""}.</span>`;
   if(!deviceAccounts.length){
     box.innerHTML = `<p class="note" style="text-align:center; margin:10px 4px 4px">No account has signed in on this device yet.<br>Add one under “Use another account” below.</p>`;
     return;
@@ -3630,14 +3630,12 @@ function renderDeviceChooser(){
   }).join("");
 }
 
-/* Tapping a chooser row — or Continuing with a typed Gmail — signs in
-   through here: approved enters at once (registering the Gmail on
-   this phone first if it is new and a slot is free), removed is
-   blocked, unapproved files a pending request. No password is ever
-   asked. */
-/* Tapping a chooser row — or Continuing with a typed Gmail — opens
-   the password step for that Gmail. The server, not this page,
-   decides whether the account may enter. */
+/* Tapping a chooser row signs in through Google — exactly like
+   Continuing with a typed Gmail (doGoogleOther): the user is pointed
+   at the official Google button above, which opens Google's own
+   account chooser with every Google account on this browser. No
+   password is ever asked. The tapped Gmail is kept only as a hint;
+   the server decides who may enter, after Google sign-in. */
 function devicePick(email){
   const em = String(email || "").trim().toLowerCase();
   const eEl = $("gErr"), mEl = $("gMsg");
@@ -3647,7 +3645,22 @@ function devicePick(email){
     if(eEl) eEl.textContent = "📱 This device already has 2 Im Live accounts — the maximum for one phone. Sign in with an account already on this device, or use another phone.";
     return false;
   }
-  openGooglePwStep(em, "login");
+  /* Passwordless: make sure the Google button is rendered, then point
+     the user at it — same action as doGoogleOther. No password step
+     is opened from here. */
+  try{ initGoogleSignIn(); }catch(err){ if(window.console) console.warn("initGoogleSignIn", err); }
+  if(mEl) mEl.textContent = "Tap the Google button above to pick from all your Google accounts — no Im Live password needed.";
+  const wrap = $("gisWrap");
+  if(wrap){
+    try{ wrap.classList.remove("hidden"); }catch(err){}
+    try{ wrap.scrollIntoView({behavior:"smooth", block:"center"}); }catch(err){}
+    try{
+      wrap.classList.remove("gisFlash");
+      void wrap.offsetWidth; /* restart the flash if tapped twice */
+      wrap.classList.add("gisFlash");
+      setTimeout(function(){ try{ wrap.classList.remove("gisFlash"); }catch(err){} }, 2600);
+    }catch(err){ if(window.console) console.warn("gisFlash", err); }
+  }
   return false;
 }
 /* ---- Google password step (live server sign-in) ---- */
@@ -3909,9 +3922,9 @@ async function restoreApiSession(){
    Google accounts signed in to that browser — that chooser is the
    only place all Gmails appear. The button is scrolled into view and
    briefly highlighted with a gold flash. The password step is NOT
-   reachable from here at all; it stays reachable only from
-   device-chooser rows (devicePick) for accounts that already signed
-   in on this device and have an Im Live password. The address is
+   reachable from here at all, nor from device-chooser rows
+   (devicePick does the same Google-first action); openGooglePwStep
+   stays in the file only as a future fallback. The address is
    read at tap time from the live field (the button is the form's
    submit button, so a tap can never race a half-typed value); the
    gEmailTyped mirror is only a fallback for webviews whose field
