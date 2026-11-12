@@ -2430,7 +2430,7 @@ button{touch-action:manipulation; -webkit-tap-highlight-color:transparent}
            .fairyBg above), the bubbly "im live" alphabet floats over
            its middle, and the sign-in controls rest at the bottom. -->
       <h1 class="loginName srOnly">im live</h1>
-      <button class="gBtn" id="gBtn" type="button" data-signin="google" onclick="toggleLoginPanel('google')">
+      <button class="gBtn" id="gBtn" type="button" data-signin="google" onclick="coverGoogleSignIn()">
         <svg class="gIcon" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 8 3l5.7-5.7C34.3 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 8 3l5.7-5.7C34.3 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.1 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
         <span>Sign in with Google</span>
       </button>
@@ -3522,6 +3522,79 @@ function buildLoginAccounts(){
    inside the scroller — on many phones the card landed out of sight and
    the button looked dead, and a second tap toggled it shut again.) The
    card's ‹ Back button returns to the hero. */
+/* ---- Cover "Sign in with Google": Google picker first ----
+   One tap should show every Google account on this browser — no
+   typing, no password — exactly like Google's own account picker.
+   So the cover button first tries Google's One Tap picker
+   (google.accounts.id.prompt): it lists the browser's Google
+   accounts, and picking one hands its ID token to
+   handleGoogleCredential, the same path as the GIS button.
+   One Tap is best-effort only (browsers suppress it when the user
+   opted out, dismissed it recently, or has no Google session), so a
+   moment listener + a short safety timer detect "did not show" and
+   fall back to the Google panel, where the official GIS button sits
+   at the top. No password step is ever opened from this path. */
+let gisPickerInit = false, _coverPickerTimer = null;
+function initGooglePicker(){
+  /* Initialise GIS without rendering the button: the panel is still
+     hidden on the cover, so renderButton would measure a zero width.
+     initGoogleSignIn renders the button later, when the panel opens. */
+  if(gisPickerInit || !gisConfigured()) return false;
+  if(typeof google === "undefined" || !google.accounts || !google.accounts.id) return false;
+  try{
+    google.accounts.id.initialize({client_id: GOOGLE_WEB_CLIENT_ID, callback: handleGoogleCredential, auto_select: false, cancel_on_tap_outside: true});
+    gisPickerInit = true;
+    return true;
+  }catch(err){ if(window.console) console.warn("initGooglePicker", err); return false; }
+}
+function openCoverGooglePanel(){
+  /* Panel fallback for the cover button. Clearing
+     _coverPickerPending also tells the sign-in tap rescue to stay out
+     of the way while a picker attempt owns the tap. */
+  window._coverPickerPending = false;
+  if(typeof gisBusy !== "undefined" && gisBusy) return; /* a Google sign-in is in flight — do not cover it with the panel */
+  try{ toggleLoginPanel("google"); }catch(err){ if(window.console) console.warn("openCoverGooglePanel", err); }
+}
+function coverGoogleSignIn(){
+  if(_coverPickerTimer){ try{ clearTimeout(_coverPickerTimer); }catch(e){} _coverPickerTimer = null; }
+  window._coverPickerPending = false;
+  let shown = false;
+  try{
+    if(initGooglePicker()){
+      window._coverPickerPending = true;
+      google.accounts.id.prompt(function(notification){
+        try{
+          if(!notification || typeof notification.isDisplayed !== "function") return;
+          if(notification.isDisplayed()){
+            shown = true; /* picker is up — it owns the tap now */
+          }else if(notification.isNotDisplayed && notification.isNotDisplayed()){
+            openCoverGooglePanel();
+          }else if(notification.isSkippedMoment && notification.isSkippedMoment()){
+            openCoverGooglePanel();
+          }else if(notification.isDismissedMoment && notification.isDismissedMoment()){
+            /* Picker closed. If the user picked an account, its
+               credential lands a beat later — wait briefly so a
+               sign-in in flight is not covered by the panel. */
+            setTimeout(function(){
+              window._coverPickerPending = false;
+              if(typeof gisBusy === "undefined" || !gisBusy) openCoverGooglePanel();
+            }, 400);
+          }
+        }catch(err){ if(window.console) console.warn("coverGooglePicker", err); }
+      });
+      /* Safety net: if the moment callback never reports (some
+         browsers swallow it), fall back to the panel — unless the
+         picker did show or a sign-in is already in flight. */
+      _coverPickerTimer = setTimeout(function(){
+        _coverPickerTimer = null;
+        if(!shown && (typeof gisBusy === "undefined" || !gisBusy)) openCoverGooglePanel();
+      }, 2000);
+      return;
+    }
+  }catch(err){ if(window.console) console.warn("coverGoogleSignIn", err); }
+  /* GIS unavailable — straight to the panel. */
+  openCoverGooglePanel();
+}
 function toggleLoginPanel(which){
   /* Swap FIRST, before anything that could throw: the account-list build
      and the step reset used to run before the swap, so a single failure
@@ -3575,21 +3648,21 @@ function enterApp(person, role){
    account (role, team) that drives the app. An unregistered Gmail
    registers through POST /api/auth/register, which files a pending
    Host application for the Staff Panel. */
-/* ---- Sign in with Google: "Choose your account" + password ----
-   Tapping "Sign in with Google" opens the chooser: the Gmail accounts
-   signed in on this device (kept in localStorage, at most 2) are
-   listed, and tapping one — or typing a Gmail under "Use another
-   account" — opens the password step for that Gmail. The live server
-   signs in by Gmail + password: POST /api/auth/login. There is no
-   passwordless entry any more, and nothing on this page decides who
-   may enter — the server checks the password, the approval status
-   and the lockout. A Gmail with no account yet can register from the
-   same step (POST /api/auth/register): that files a pending Host
-   application, and the Staff Panel must approve it before the Gmail
-   can sign in. (A web page cannot read the operating system's real
-   Google accounts — the production Android app uses the native Google
-   account picker; this chooser is the in-page equivalent for the
-   accounts this device holds.) */
+/* ---- Sign in with Google: "Choose your account" ----
+   The cover button first tries Google's own account picker (see
+   coverGoogleSignIn); the panel itself lists the Gmail accounts
+   signed in on this device (kept in localStorage, at most 2), and
+   tapping one — or typing a Gmail under "Use another account" —
+   points at the official Google button above, which opens Google's
+   chooser with every Google account on this browser. Google sign-in
+   is passwordless: the ID token goes to POST /api/auth/google, and
+   the server checks the approval status and the lockout — nothing on
+   this page decides who may enter. A Gmail with no account yet files
+   a pending Host application, and the Staff Panel must approve it
+   before the Gmail can sign in. (A web page cannot read the
+   operating system's real Google accounts — the production Android
+   app uses the native Google account picker; Google's own chooser is
+   the in-page equivalent.) */
 const DEVICE_ACCOUNT_LIMIT = 2;
 /* Live mirror of the Gmail field's contents, kept in step by the
    field's own input/change events: the Continue handler reads the
@@ -6821,6 +6894,7 @@ setTimeout(function(){
     var which = btn.getAttribute("data-signin");
     setTimeout(function(){
       if(!heroStillShown()) return; /* the tap worked — nothing to rescue */
+      if(which === "google" && window._coverPickerPending) return; /* a Google picker attempt owns this tap — the picker (or its panel fallback) is the next step, not a dead tap */
       if(typeof window.toggleLoginPanel === "function"){
         try{ window.toggleLoginPanel(which); }catch(e){}
       }
