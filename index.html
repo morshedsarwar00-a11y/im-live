@@ -194,8 +194,9 @@ h1,h2,h3{margin:0}
 /* ---- Google-style "Choose your account" header + list ----
    The Google panel is shaped like Google's own account picker: the G
    mark and a big "Choose your account" heading centered at the top,
-   "to continue to Im Live" under it, then every Gmail account on this
-   device listed as full rows divided by hairlines. */
+   "to continue to Im Live" under it, then the Gmail accounts that
+   have signed in on this device listed as full rows divided by
+   hairlines. */
 #googlePanel .chooserHead{flex-direction:column; align-items:center; text-align:center; gap:5px; position:relative; margin-bottom:8px}
 #googlePanel .chooserHead .lpBack{position:absolute; left:-4px; top:-2px; margin-left:0}
 #googlePanel .chooserHead .gIcon{width:34px; height:34px}
@@ -2429,14 +2430,16 @@ button{touch-action:manipulation; -webkit-tap-highlight-color:transparent}
       </button>
     </div>
 
-    <!-- Sign in with Google — passwordless "Choose your account"
-         chooser in Google's own picker shape: every Gmail account on
-         this device is listed (avatar, name, address) under a big
-         "Choose your account" heading, and tapping one signs straight
-         in. A Gmail that is not listed can be typed under "Use another
-         account" and Continued — an approved Gmail is added to this
-         device and signed in at once. No password is asked anywhere in
-         this flow. At most 2 Im Live accounts can live on one device. -->
+    <!-- Sign in with Google — "Choose your account" chooser in
+         Google's own picker shape: only the Gmail accounts that have
+         actually signed in on THIS device (kept in localStorage, at
+         most 2) are listed (avatar, name, address) under a big
+         "Choose your account" heading. Tapping one opens the password
+         step for that Gmail — the live server signs in by Gmail +
+         password. A Gmail that is not listed can be typed under "Use
+         another account" and Continued. No other person's Gmail is
+         ever listed here. At most 2 Im Live accounts can live on one
+         device. -->
     <div id="googlePanel" class="loginPanel hidden">
       <div class="lpHead chooserHead">
         <button type="button" class="lpBack" onclick="backToHero()" aria-label="Back to sign-in options">‹</button>
@@ -3211,7 +3214,7 @@ const state = {
    The server address lives in ONE place (API_BASE_URL below). To
    point the app at a new deployment, change that one line only —
    no other line in this file mentions the server. */
-const API_BASE_URL = "https://imhereapi-myv5r71y.back4.app";
+const API_BASE_URL = "https://im-here-api-production.up.railway.app";
 /* Sign-in tokens: kept in memory and in localStorage, so a reload
    keeps the session. They are the ONLY secret the app stores — no
    password is ever stored. */
@@ -3578,12 +3581,16 @@ function renderDeviceChooser(){
   const bar = $("deviceBar"), box = $("deviceAccounts");
   if(!box) return;
   /* The Gmail accounts signed in on THIS device (localStorage), in
-     the order they signed in. This list is not an approval list —
-     the server decides who may enter, after the password step. */
+     the order they signed in. This list comes ONLY from the
+     localStorage device-account store — never from the demo PEOPLE
+     list or any hardcoded Gmail. Only a Gmail that actually signed
+     in on this device (via the live server) is ever listed here.
+     This list is not an approval list — the server decides who may
+     enter, after the password step. */
   const used = deviceAccounts.length, full = used >= DEVICE_ACCOUNT_LIMIT;
-  if(bar) bar.innerHTML = `📱 <span><b>Accounts on this device</b> — tap one, then enter its password. This device holds ${used} of ${DEVICE_ACCOUNT_LIMIT} Im Live accounts${full ? " (full)" : ""}.</span>`;
+  if(bar) bar.innerHTML = `📱 <span><b>Accounts signed in on this device</b> — tap one, then enter its password. This device holds ${used} of ${DEVICE_ACCOUNT_LIMIT} Im Live accounts${full ? " (full)" : ""}.</span>`;
   if(!deviceAccounts.length){
-    box.innerHTML = `<p class="note" style="text-align:center; margin:10px 4px 4px">No Gmail account is available on this device yet.<br>Add one under “Use another account” below.</p>`;
+    box.innerHTML = `<p class="note" style="text-align:center; margin:10px 4px 4px">No account has signed in on this device yet.<br>Add one under “Use another account” below.</p>`;
     return;
   }
   box.innerHTML = deviceAccounts.map(({email, name})=>{
