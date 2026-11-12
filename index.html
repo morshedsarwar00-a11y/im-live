@@ -2486,6 +2486,7 @@ button{touch-action:manipulation; -webkit-tap-highlight-color:transparent}
           <div class="err" id="gPwErr"></div>
           <div class="okmsg" id="gPwMsg"></div>
           <button class="btn" id="gPwBtn" type="submit" style="width:100%">Sign in</button>
+          <p class="note" id="gPwNote" style="text-align:center; margin-top:8px">Password is only for accounts that have an Im Live password — Google sign-in needs no password.</p>
         </form>
         <p class="note" style="text-align:center; margin-top:8px"><a href="#" onclick="toggleGooglePwMode(); return false;" id="gPwModeLink">New here? Create an account</a></p>
         <p class="note" style="text-align:center; margin-top:4px"><a href="#" onclick="backToGoogleChooser(); return false;">&#8592; Use a different account</a></p>
@@ -3672,6 +3673,7 @@ function applyGooglePwMode(){
   const nf = $("gRegNameField"); if(nf) nf.style.display = isReg ? "" : "none";
   const pw = $("gPw"); if(pw) pw.placeholder = isReg ? "Choose a password (8+ characters, letter + number)" : "Your Im Live password";
   const link = $("gPwModeLink"); if(link) link.textContent = isReg ? "Already have an account? Sign in" : "New here? Create an account";
+  const note = $("gPwNote"); if(note) note.style.display = isReg ? "none" : ""; /* note only applies to the password sign-in, not to choosing a new password */
 }
 function toggleGooglePwMode(){
   gPwMode = gPwMode === "register" ? "login" : "register";
@@ -3893,24 +3895,59 @@ async function restoreApiSession(){
   }
 }
 
-/* "Use another account" + "Continue": the Gmail typed here opens
-   the password step, exactly like tapping a chooser row — the live
-   server checks the password and the approval status. The address
-   is read at tap time from the live field (the button is the form's
+/* "Use another account" + "Continue": typing a Gmail here must NEVER
+   lead straight to a password step — sign-in is passwordless. The
+   Gmail is validated, then Google's own account picker (One Tap) is
+   opened: the user picks a Google account, Google verifies it, and
+   handleGoogleCredential signs in with the returned ID token — no Im
+   Live password is ever asked. Only if Google's picker cannot be
+   shown (GIS not configured, script unavailable, or the user closes
+   the pop-up) does the password step appear, as a fallback for
+   accounts that actually have an Im Live password. The address is
+   read at tap time from the live field (the button is the form's
    submit button, so a tap can never race a half-typed value); the
    gEmailTyped mirror is only a fallback for webviews whose field
    read lags the typing — a Gmail that is visibly typed must never
    trigger the "enter the Gmail address first" error. */
+let _gOtherPwFallbackTimer = null;
 function doGoogleOther(e){
   if(e) e.preventDefault();
   const emEl = $("gEmail");
   let raw = emEl ? (emEl.value || "") : "";
   if(!raw.trim() && gEmailTyped) raw = gEmailTyped;
   const em = raw.trim().toLowerCase();
-  $("gMsg").textContent = ""; $("gErr").textContent = "";
-  if(!em){ $("gErr").textContent = "Please enter the Gmail address first."; if(emEl) emEl.focus(); return false; }
-  if(!/^[^\s@]+@gmail\.com$/.test(em)){ $("gErr").textContent = "That is not a Gmail address — sign-in works with Gmail (…@gmail.com) or a phone number only."; if(emEl) emEl.focus(); return false; }
-  return devicePick(em);
+  const mEl = $("gMsg"), eEl = $("gErr");
+  if(mEl) mEl.textContent = ""; if(eEl) eEl.textContent = "";
+  if(!em){ if(eEl) eEl.textContent = "Please enter the Gmail address first."; if(emEl) emEl.focus(); return false; }
+  if(!/^[^\s@]+@gmail\.com$/.test(em)){ if(eEl) eEl.textContent = "That is not a Gmail address — sign-in works with Gmail (…@gmail.com) or a phone number only."; if(emEl) emEl.focus(); return false; }
+  if(_gOtherPwFallbackTimer){ clearTimeout(_gOtherPwFallbackTimer); _gOtherPwFallbackTimer = null; }
+  /* Passwordless path first: Google's account picker (One Tap). */
+  if(gisConfigured() && typeof google !== "undefined" && google.accounts && google.accounts.id){
+    try{ initGoogleSignIn(); }catch(err){ if(window.console) console.warn("initGoogleSignIn", err); }
+    try{
+      if(mEl) mEl.textContent = "Choose your Google account in the Google pop-up — no Im Live password needed.";
+      google.accounts.id.prompt(function(notification){
+        let noPrompt = false;
+        try{ noPrompt = !notification || notification.isNotDisplayed() || notification.isSkippedMoment() || notification.isDismissedMoment(); }
+        catch(err){ noPrompt = true; }
+        if(!noPrompt) return; /* picker is showing — wait for the user to pick an account */
+        /* Picker did not appear or was closed: give the credential
+           callback a moment to fire first (it sets gisBusy), then
+           fall back to the password step for password accounts. */
+        _gOtherPwFallbackTimer = setTimeout(function(){
+          _gOtherPwFallbackTimer = null;
+          if(typeof gisBusy !== "undefined" && gisBusy) return; /* Google sign-in is in flight — do not fall back */
+          if(mEl) mEl.textContent = ""; if(eEl) eEl.textContent = "";
+          openGooglePwStep(em, "login");
+        }, 700);
+      });
+      return false;
+    }catch(err){ if(window.console) console.warn("google prompt", err); /* fall through to the password fallback */ }
+  }
+  /* Fallback (GIS unavailable): password step, for accounts that
+     actually have an Im Live password. */
+  openGooglePwStep(em, "login");
+  return false;
 }
 function resetGooglePanel(){
   ["gErr","gMsg"].forEach(id=>{ const el = $(id); if(el) el.textContent = ""; });
