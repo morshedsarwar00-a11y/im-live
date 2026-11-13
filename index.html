@@ -3551,6 +3551,18 @@ function openCoverGooglePanel(){
   try{ toggleLoginPanel("google"); }catch(err){ if(window.console) console.warn("openCoverGooglePanel", err); }
 }
 function coverGoogleSignIn(){
+  /* Native Android app: if the native bridge exists, launch the native
+     account picker straight away (one tap, no typing, no password) and
+     skip One Tap + the in-page panel. The bridge is registered before
+     the page loads, so this has no timing race. Browsers have no
+     bridge, so they fall through to the normal flow below. */
+  try{
+    var _bridge = window.ImLiveBridge;
+    if(_bridge){
+      if(typeof _bridge.onCoverGoogleTap === "function"){ _bridge.onCoverGoogleTap(); return; }
+      if(typeof _bridge.onGooglePanelOpened === "function"){ _bridge.onGooglePanelOpened(); return; }
+    }
+  }catch(e){}
   if(_coverPickerTimer){ try{ clearTimeout(_coverPickerTimer); }catch(e){} _coverPickerTimer = null; }
   window._coverPickerPending = false;
   let shown = false;
