@@ -6796,7 +6796,27 @@ function renderAll(){
   cStart();
 }
 renderAll();
-restoreApiSession();
+/* No auto-login on a fresh visit: a fresh navigation always starts on
+   the cover, so Gmail is asked every time (no password) and the user
+   signs in again. Only a reload / back-forward restores a saved
+   session — that is how the native app's token hand-off works (it
+   writes fresh tokens then reloads the page, and restoreApiSession()
+   enters the app). An unknown navigation type keeps the old behaviour
+   so the native hand-off never breaks on an old webview. */
+(function(){
+  var navType = "";
+  try {
+    var nav = performance.getEntriesByType && performance.getEntriesByType("navigation");
+    if (nav && nav[0] && nav[0].type) navType = nav[0].type;
+    else if (performance.navigation) {
+      var t = performance.navigation.type;
+      navType = t === 1 ? "reload" : (t === 2 ? "back_forward" : "navigate");
+    }
+  } catch (e) { navType = ""; }
+  if (navType === "reload" || navType === "back_forward" || !navType) { restoreApiSession(); return; }
+  /* Fresh navigation: drop the saved session so the cover + Gmail is shown. */
+  apiClearTokens();
+})();
 </script>
 <script>
 /* Boot watchdog — deliberately a separate tiny script: if the main app
