@@ -3555,12 +3555,18 @@ function coverGoogleSignIn(){
      account picker straight away (one tap, no typing, no password) and
      skip One Tap + the in-page panel. The bridge is registered before
      the page loads, so this has no timing race. Browsers have no
-     bridge, so they fall through to the normal flow below. */
+     bridge, so they fall through to the normal flow below.
+     NOTE: call the bridge methods directly — do NOT gate them on a
+     typeof check. On this device the typeof check on an injected
+     Java method fails, so the cover tap fell through to the panel
+     even though the bridge exists (the panel wrapper, which calls
+     onGooglePanelOpened directly, works). A missing method just
+     throws inside the try, and we fall through to the panel. */
   try{
     var _bridge = window.ImLiveBridge;
     if(_bridge){
-      if(typeof _bridge.onCoverGoogleTap === "function"){ _bridge.onCoverGoogleTap(); return; }
-      if(typeof _bridge.onGooglePanelOpened === "function"){ _bridge.onGooglePanelOpened(); return; }
+      try{ _bridge.onCoverGoogleTap(); return; }catch(e){}
+      try{ _bridge.onGooglePanelOpened(); return; }catch(e){}
     }
   }catch(e){}
   if(_coverPickerTimer){ try{ clearTimeout(_coverPickerTimer); }catch(e){} _coverPickerTimer = null; }
