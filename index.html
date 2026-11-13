@@ -2435,14 +2435,6 @@ button{touch-action:manipulation; -webkit-tap-highlight-color:transparent}
         <svg class="gIcon" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 8 3l5.7-5.7C34.3 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 8 3l5.7-5.7C34.3 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.1 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
         <span>Sign in with Google</span>
       </button>
-      <!-- Official Google button on the cover (rendered by GIS into
-           #gisBtnCover below): tapping it opens Google's own account
-           chooser directly. In the Android app the popup is
-           intercepted and replaced by the native picker (one tap, no
-           typing, no password); in a browser it opens Google's
-           chooser. Once it renders, the custom button above is
-           hidden. If GIS never loads, the custom button stays. -->
-      <div id="gisBtnCover" style="display:flex; justify-content:center; margin:12px 0 2px"></div>
       <div class="orRow" aria-hidden="true"><span class="orLine"></span><span class="orTxt">or</span><span class="orLine"></span></div>
       <button class="phoneBtn" id="phoneBtn" type="button" data-signin="phone" onclick="toggleLoginPanel('phone')" aria-label="Sign in with phone number">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.6"/><line x1="10.5" y1="18.4" x2="13.5" y2="18.4" stroke-linecap="round"/></svg>
@@ -3833,7 +3825,7 @@ async function doGooglePwSubmit(e){
    If the constant ever holds a placeholder instead of a real ID,
    gisConfigured is false: nothing renders, nothing is sent, and the
    chooser / password flow below works exactly as before. */
-let gisRendered = false, gisBusy = false, gisInitTries = 0, gisCoverRendered = false;
+let gisRendered = false, gisBusy = false, gisInitTries = 0;
 /* A real Web OAuth Client ID always ends in .apps.googleusercontent.com;
    any other value (e.g. a placeholder) counts as not configured. */
 function gisConfigured(){
@@ -3863,36 +3855,12 @@ function initGoogleSignIn(){
     const note = $("gisNote"); if(note) note.classList.remove("hidden");
   }catch(err){ if(window.console) console.warn("initGoogleSignIn", err); }
 }
-/* Official Google button on the COVER (see #gisBtnCover): rendered as
-   soon as GIS loads, while the cover is visible. Tapping it opens
-   Google's own account chooser directly — in the Android app the
-   popup is intercepted and replaced by the native picker, in a
-   browser it opens Google's chooser. Once it renders, the custom
-   gold button is hidden so there is only one Google button. If GIS
-   never loads, the custom button stays and the normal flow applies. */
-function initCoverGoogleButton(){
-  try{
-    if(gisCoverRendered || !gisConfigured()) return;
-    if(typeof google === "undefined" || !google.accounts || !google.accounts.id) return;
-    const cover = $("gisBtnCover"), gbtn = $("gBtn");
-    if(!cover) return;
-    google.accounts.id.initialize({client_id: GOOGLE_WEB_CLIENT_ID, callback: handleGoogleCredential, auto_select: false, cancel_on_tap_outside: true});
-    const w = cover.clientWidth || 320;
-    google.accounts.id.renderButton(cover, {theme: "outline", size: "large", text: "signin_with", shape: "pill", width: Math.max(240, Math.min(320, w))});
-    gisCoverRendered = true;
-    if(gbtn) gbtn.classList.add("hidden");
-  }catch(err){ if(window.console) console.warn("initCoverGoogleButton", err); }
-}
 /* The GIS script (head, async defer) may land after this script runs,
    so retry briefly for it. Opening the Google panel also calls
    initGoogleSignIn directly, so a late panel open still renders. */
 function maybeInitGoogleSignIn(){
-  if(!gisConfigured()) return;
-  if(typeof google !== "undefined" && google.accounts && google.accounts.id){
-    try{ initCoverGoogleButton(); }catch(err){}
-    try{ initGoogleSignIn(); }catch(err){}
-    return;
-  }
+  if(gisRendered || !gisConfigured()) return;
+  if(typeof google !== "undefined" && google.accounts && google.accounts.id){ initGoogleSignIn(); return; }
   if(gisInitTries++ < 20) setTimeout(maybeInitGoogleSignIn, 500);
 }
 async function handleGoogleCredential(response){
