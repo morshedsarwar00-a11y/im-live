@@ -2149,6 +2149,86 @@ body:has(#view-home.on){
 }
 .tgMult.on{background:var(--goldGrad); color:#3a2703; border-color:#ffe9a8; box-shadow:0 0 14px rgba(255,200,60,.65)}
 .tgPay{font-size:11.5px; opacity:.82; margin:12px 0 0; line-height:1.65}
+/* Fruit Jackpot — 3×3 fruit board in a red machine frame: Grand Pool
+   counter and bonus reels on top, a running light travels the ring. */
+.fjPoolBox{text-align:center; margin-bottom:12px}
+.fjPoolNum{
+  display:inline-block; min-width:min(250px,82%); padding:4px 18px; border-radius:12px;
+  background:linear-gradient(180deg,#6d28d9,#4c1d95); border:2px solid #ffd23e; color:#ffe45e;
+  font-weight:900; font-size:clamp(19px,5.6vw,25px); letter-spacing:.04em;
+  box-shadow:0 0 16px rgba(168,85,247,.5), inset 0 0 10px rgba(0,0,0,.5); font-variant-numeric:tabular-nums;
+}
+.fjPoolLbl{font-size:10px; font-weight:900; letter-spacing:.28em; color:#e9d5ff; margin-top:5px}
+.fjReels{display:flex; justify-content:center; gap:6px; margin-top:8px}
+.fjReel{
+  width:52px; height:38px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(180deg,#f4f4f8,#c9c9d6); border:3px solid #e8a812; color:#7c3aed;
+  font-weight:900; font-size:19px; box-shadow:inset 0 0 8px rgba(0,0,0,.25);
+}
+.fjReel.spin{animation:fjReelShake .12s linear infinite}
+@keyframes fjReelShake{50%{transform:translateY(2px)}}
+.fjReel.bonus{background:linear-gradient(180deg,#ffe45e,#ffb03a); color:#7c2d12; box-shadow:0 0 16px rgba(255,210,62,.8)}
+.fjMachine{
+  background:linear-gradient(180deg,#f0443a,#c01420 30%,#a30f1a); border-radius:20px; padding:10px;
+  box-shadow:0 12px 26px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.35);
+}
+.fjGrid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+.fjCell{
+  background:linear-gradient(180deg,#701527,#4d0a18); border:2px solid rgba(255,150,150,.28); border-radius:14px;
+  padding:8px 4px 7px; text-align:center; cursor:pointer; color:#fff7e6; position:relative; width:100%;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+  font-family:inherit; transition:transform .08s, box-shadow .12s, background .12s;
+}
+.fjCell:active{transform:scale(.96)}
+.fjCell svg{width:clamp(38px,11vw,54px); height:clamp(38px,11vw,54px); display:block}
+.fjMult{font-weight:800; font-size:13px; color:#ffd9d9}
+.fjName{font-size:10px; font-weight:800; color:rgba(255,255,255,.55); letter-spacing:.03em}
+.fjCell.lit{background:linear-gradient(180deg,#2f6bff,#1d3fae); border-color:#9ec2ff; box-shadow:0 0 0 3px #ffe45e, 0 0 20px rgba(80,140,255,.9)}
+.fjCell.win{background:linear-gradient(180deg,#ffb03a,#e07b00); border-color:#fff3b0; box-shadow:0 0 0 3px #ffe45e, 0 0 26px rgba(255,176,58,.95); animation:fjWinPulse .45s ease-in-out 4}
+@keyframes fjWinPulse{50%{transform:scale(1.06)}}
+.fjCell.locked{opacity:.48; filter:saturate(.5)}
+.fjCell.locked:active{transform:none}
+.fjMyBet{
+  position:absolute; top:-7px; right:-5px; display:none; z-index:2;
+  background:linear-gradient(180deg,#ffe45e,#ffb03a); color:#7c2d12; font-weight:900; font-size:11.5px;
+  padding:2px 8px; border-radius:999px; border:2px solid #fff3b0; box-shadow:0 3px 8px rgba(0,0,0,.4);
+}
+.fjMyBet.show{display:block}
+.fjCenter{
+  background:linear-gradient(180deg,#3b0764,#24043f); border:2px solid rgba(216,180,254,.4); border-radius:14px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; padding:6px 2px; overflow:hidden;
+}
+.fjCd{font-weight:900; font-size:clamp(34px,10vw,50px); color:#ffe45e; line-height:1; text-shadow:0 0 14px rgba(255,210,62,.6); font-variant-numeric:tabular-nums}
+.fjCd.small{font-size:clamp(20px,6vw,27px)}
+.fjPhase{font-size:9.5px; font-weight:900; letter-spacing:.14em; color:#d8b4fe; margin-top:3px; text-align:center}
+.fjCenter.urgent .fjCd{color:#ff6b6b; animation:fjBlink .5s steps(2) infinite}
+@keyframes fjBlink{50%{opacity:.45}}
+.fjResult{
+  margin-top:10px; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.14); border-radius:12px;
+  padding:6px 10px; display:flex; align-items:center; gap:8px; overflow:hidden; min-height:44px;
+}
+.fjRLbl{font-weight:900; font-size:12px; color:#ffb3ba; flex:none}
+.fjRHist{display:flex; gap:6px; align-items:center; flex:1; overflow:hidden; min-height:30px}
+.fjRItem{width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center; flex:none}
+.fjRItem svg{width:22px; height:22px}
+.fjRItem.new{outline:2px solid #ffd23e}
+.fjREmpty{font-size:12px; color:rgba(255,255,255,.45); font-weight:700}
+.fjStats{display:flex; gap:8px; margin-top:10px}
+.fjStat{
+  flex:1; background:rgba(0,0,0,.38); border:1px solid rgba(255,255,255,.16); border-radius:13px;
+  padding:7px 4px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:1px;
+}
+.fjSL{font-size:10px; font-weight:900; letter-spacing:.1em; color:rgba(255,255,255,.6)}
+.fjStat b{font-size:16.5px; color:#ffe45e; font-variant-numeric:tabular-nums}
+.fjStat b.win{color:#8dff9a}
+.fjCnt{font-size:10.5px; font-weight:800; color:rgba(255,255,255,.65)}
+.fjRepeat{
+  border:none; cursor:pointer; font-weight:900; border-radius:13px; padding:10px 16px; font-size:14.5px; color:#fff;
+  background:linear-gradient(180deg,#a06be0,#6d28d9); box-shadow:0 3px 0 #4c1d95; font-family:inherit;
+}
+.fjRepeat:active{transform:translateY(2px); box-shadow:0 1px 0 #4c1d95}
+.fjRound{text-align:center; font-size:11.5px; font-weight:700; color:rgba(255,255,255,.6); margin:10px 0 0}
+.fjRound b{color:#ffcf5e}
 .gResult{border-radius:14px; padding:13px 14px; font-weight:800; font-size:15.5px; margin:14px 0 12px; line-height:1.45}
 .gResult.win{background:rgba(23,140,80,.35); border:1.5px solid #37e08b; color:#d9ffe9}
 .gResult.lose{background:rgba(160,40,30,.32); border:1.5px solid #ff7a6b; color:#ffe3de}
@@ -3531,7 +3611,8 @@ const GAMES = [
   {n:"Yummy", e:"🧁", g:"linear-gradient(135deg,#11998e,#38ef7d)"},
   {n:"Delicious", e:"🍰", g:"linear-gradient(135deg,#d6578a,#f78fb3)"},
   {n:"Fishing Star", e:"🎣", g:"linear-gradient(135deg,#0575e6,#00c6ff)"},
-  {n:"Temple Gems", e:"💎", g:"linear-gradient(135deg,#92400e,#f59e0b)"}
+  {n:"Temple Gems", e:"💎", g:"linear-gradient(135deg,#92400e,#f59e0b)"},
+  {n:"Fruit Jackpot", e:"🍓", g:"linear-gradient(135deg,#7c2d12,#f59e0b)"}
 ];
 const GAMERS = [["Tanvir",2],["Mim",1],["Hira",3],["Dev",8],["?",0],["Sagar",6],["Priya",5]];
 let chats = [
@@ -5565,6 +5646,233 @@ function tgSpin(){
   }, 1150);
 }
 
+/* ---- Fruit Jackpot: 3×3 fruit betting board, running light, grand pool ----
+   Ported from the standalone Fruit Jackpot game, re-based onto the Im Live
+   wallet: the shared bet chips (10/50/100/500) are the per-fruit stake —
+   every fruit tap stakes one chip through gameStake(), and the round
+   settles through gameSettle(), so wins land in the shared balance and
+   the wallet History like every other game. Whether the winning fruit is
+   one of the player's fruits is decided first (see WIN_CHANCE, shared
+   with Temple Gems above); within the win or loss group the fruit is
+   still drawn by its weight. With no bets placed it is a plain weighted
+   draw and nothing is staked or paid. */
+/* Original hand-drawn fruit art, ported from the standalone game. */
+function fjSvgWrap(inner){ return `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${inner}</svg>`; }
+const FJ_SVG = {
+  strawberry: fjSvgWrap('<path d="M32 58C18 48 12 38 12 29c0-8 7-13 14-11 2-3 10-3 12 0 7-2 14 3 14 11 0 9-6 19-20 29z" fill="#f43f4e"/><path d="M32 14c-2-5-8-7-12-5 1 4 5 7 10 7M32 14c2-5 8-7 12-5-1 4-5 7-10 7M32 14v-6" stroke="#2f9e44" stroke-width="3.4" fill="#37c978" stroke-linecap="round"/><g fill="#ffe3e3"><ellipse cx="24" cy="30" rx="1.7" ry="2.6"/><ellipse cx="32" cy="36" rx="1.7" ry="2.6"/><ellipse cx="40" cy="30" rx="1.7" ry="2.6"/><ellipse cx="27" cy="43" rx="1.7" ry="2.6"/><ellipse cx="37" cy="43" rx="1.7" ry="2.6"/></g><ellipse cx="23" cy="25" rx="5" ry="3.4" fill="#ff8a94" opacity=".65"/>'),
+  banana: fjSvgWrap('<path d="M14 12c2 16 12 30 30 36 4 1.4 7-3 4.6-6C34 34 26 24 22 10c-.8-3-8.6-2-8 2z" fill="#ffd93b"/><path d="M24 8c4 14 13 27 27 35 3.6 2 7.4-2 5-5.4C43 30 35 19 31 7c-.9-2.8-7.8-2-7 1z" fill="#ffe873"/><path d="M14 12l-2.4-4.4c-.8-1.6.8-3.4 2.4-2.8L20 7" fill="#8a5a2b"/>'),
+  watermelon: fjSvgWrap('<path d="M6 22a26 26 0 0 0 52 0z" fill="#2f9e44"/><path d="M10 22a22 22 0 0 0 44 0z" fill="#e8f7d9"/><path d="M14 22a18 18 0 0 0 36 0z" fill="#f43f4e"/><g fill="#3b1030"><ellipse cx="24" cy="30" rx="1.8" ry="2.6"/><ellipse cx="32" cy="34" rx="1.8" ry="2.6"/><ellipse cx="40" cy="30" rx="1.8" ry="2.6"/><ellipse cx="28" cy="27" rx="1.5" ry="2.2"/><ellipse cx="36" cy="27" rx="1.5" ry="2.2"/></g>'),
+  cherry: fjSvgWrap('<path d="M40 8C34 16 30 24 28 34M40 8c6 8 8 14 9 22" stroke="#2f9e44" stroke-width="3.2" fill="none" stroke-linecap="round"/><path d="M40 8c4-4 11-4 14 0-3 4-10 4-14 0z" fill="#37c978"/><circle cx="25" cy="44" r="12" fill="#e02631"/><circle cx="47" cy="40" r="10.5" fill="#f43f4e"/><ellipse cx="21" cy="39" rx="4" ry="2.8" fill="#ff9aa2" opacity=".8"/><ellipse cx="43.5" cy="35.5" rx="3.4" ry="2.4" fill="#ffb3ba" opacity=".8"/>'),
+  grapes: fjSvgWrap('<path d="M32 12V6M32 8c3-4 9-5 12-2-2 4-7 6-12 2z" stroke="#7a4a21" stroke-width="3" fill="#37c978" stroke-linecap="round"/><g fill="#8b3fbf"><circle cx="22" cy="24" r="7.5"/><circle cx="32" cy="21" r="7.5"/><circle cx="42" cy="24" r="7.5"/><circle cx="27" cy="33" r="7.5"/><circle cx="37" cy="33" r="7.5"/><circle cx="32" cy="43" r="7.5"/><circle cx="32" cy="52" r="6.5"/></g><g fill="#c99ae8" opacity=".7"><circle cx="19.5" cy="21.5" r="2.2"/><circle cx="29.5" cy="18.5" r="2.2"/><circle cx="39.5" cy="21.5" r="2.2"/><circle cx="29.5" cy="40.5" r="2.2"/></g>'),
+  orange: fjSvgWrap('<circle cx="32" cy="38" r="20" fill="#ff8b2d"/><path d="M32 18c0-5 3-8 7-9 1 5-2 9-7 9z" fill="#37c978"/><path d="M32 18c-1-3-4-5-7-5 0 4 3 6 7 5z" fill="#2f9e44"/><ellipse cx="25" cy="32" rx="6" ry="4" fill="#ffb066" opacity=".75"/><g fill="#e06a00" opacity=".5"><circle cx="38" cy="42" r="1.4"/><circle cx="30" cy="48" r="1.4"/><circle cx="42" cy="34" r="1.4"/></g>'),
+  plum: fjSvgWrap('<path d="M32 16c10 0 18 9 18 21S42 58 32 58 14 49 14 37s8-21 18-21z" fill="#5b2a86"/><path d="M32 16c-2 8-2 30 0 42" stroke="#3d1a5e" stroke-width="2.6" fill="none"/><path d="M33 15c1-5 5-8 10-8 0 5-4 9-10 8z" fill="#37c978"/><ellipse cx="24" cy="30" rx="5.4" ry="8" fill="#9a63c9" opacity=".65"/>'),
+  lemon: fjSvgWrap('<path d="M12 40c-2-3 0-6 3-6C20 22 32 13 44 15c4-1 7 1 6 5 8 9-1 24-13 28-11 4-21-1-25-8z" fill="#ffd93b"/><ellipse cx="29" cy="31" rx="11" ry="7" fill="#ffec8a" opacity=".8" transform="rotate(-24 29 31)"/><path d="M44 15c2-4 6-6 10-5-1 4-5 7-10 5z" fill="#37c978"/>')
+};
+const FJ_FRUITS = [
+  {id:"strawberry", name:"Strawberry", mult:5,  weight:40},
+  {id:"banana",     name:"Banana",     mult:5,  weight:40},
+  {id:"watermelon", name:"Watermelon", mult:5,  weight:40},
+  {id:"cherry",     name:"Cherry",     mult:40, weight:5},
+  {id:"grapes",     name:"Grapes",     mult:5,  weight:40},
+  {id:"orange",     name:"Orange",     mult:20, weight:10},
+  {id:"plum",       name:"Plum",       mult:10, weight:20},
+  {id:"lemon",      name:"Lemon",      mult:10, weight:20}
+];
+const FJ_BY_ID = {}; FJ_FRUITS.forEach(f=>{ FJ_BY_ID[f.id] = f; });
+const FJ_GRID = ["strawberry","banana","watermelon","cherry","CENTER","grapes","orange","plum","lemon"];
+const FJ_RING = ["strawberry","banana","watermelon","grapes","lemon","plum","orange","cherry"]; /* clockwise */
+const FJ_MAX_FRUITS = 6; /* per round: never all 8 fruits */
+const FJ_BET_SECONDS = 12;
+const FJ_REEL_VALS = ["+1","+3","JJ","+5","7"];
+/* Lives outside gS (which renderGame resets every round): the grand
+   pool, today's winnings, the round counter, the last round's bets
+   for Repeat, and the recent winners on the result strip. */
+const FJ = { jackpot: 37409415685, todayWin: 0, round: 21840, lastBets: {}, lastChip: 50, results: [] };
+function fjFmt(n){ return Math.floor(n).toLocaleString("en-US"); }
+function fjFmtShort(n){
+  if(n >= 1000000) return (n/1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + "M";
+  if(n >= 1000) return (n/1000).toFixed(n % 1000 === 0 ? 0 : 1) + "K";
+  return "" + n;
+}
+function fjTotal(){ let s = 0; for(const k in gS.fj.bets) s += gS.fj.bets[k]; return s; }
+function fjCount(){ let c = 0; for(const k in gS.fj.bets) if(gS.fj.bets[k] > 0) c++; return c; }
+function fjStageHTML(){
+  return `
+    <p class="gHow">Tap a fruit to stake the selected chip on it — tap the same fruit again to add more. You can back up to 6 of the 8 fruits. When the timer ends, the light runs the ring and the fruit it lands on pays its prize; land Cherry and you also take 5% of the Grand Jackpot Pool, and if the three top reels match, your win doubles.</p>
+    <div class="fjPoolBox">
+      <div class="fjPoolNum" id="fjPool">${fjFmt(FJ.jackpot)}</div>
+      <div class="fjPoolLbl">★ GRAND JACKPOT POOL ★</div>
+      <div class="fjReels">${["+3","JJ","+1"].map((v,i)=>`<div class="fjReel" id="fjReel${i}">${v}</div>`).join("")}</div>
+    </div>
+    <div class="fjMachine"><div class="fjGrid">
+      ${FJ_GRID.map(id => id === "CENTER"
+        ? `<div class="fjCenter" id="fjCenter"><div class="fjCd" id="fjCd">${FJ_BET_SECONDS}</div><div class="fjPhase" id="fjPhase">PLACE YOUR BETS</div></div>`
+        : `<button class="fjCell" id="fjCell-${id}" onclick="fjBet('${id}')">${FJ_SVG[id]}<span class="fjMult">${FJ_BY_ID[id].mult} times</span><span class="fjName">${FJ_BY_ID[id].name}</span><span class="fjMyBet" id="fjBet-${id}">0</span></button>`).join("")}
+    </div></div>
+    <div class="fjResult"><span class="fjRLbl">Result</span><span class="fjRHist" id="fjRHist"></span></div>
+    <div class="fjStats">
+      <div class="fjStat"><span class="fjSL">MY BET</span><b id="fjMyTotal">0</b><span class="fjCnt" id="fjCnt">0 / ${FJ_MAX_FRUITS} fruits</span></div>
+      <div class="fjStat"><span class="fjSL">TODAY WIN</span><b class="win" id="fjToday">0</b></div>
+      <button class="fjRepeat" onclick="fjRepeat()">Repeat</button>
+    </div>
+    <p class="fjRound">Round <b id="fjRound">${FJ.round.toLocaleString("en-US")}</b> · Max 6 fruits per round · Bets clear every new round</p>
+    <div id="gOut"></div>`;
+}
+function fjRefresh(){
+  const p = $("fjPool"); if(p) p.textContent = fjFmt(FJ.jackpot);
+  FJ_FRUITS.forEach(f=>{
+    const b = $("fjBet-" + f.id); if(!b) return;
+    const v = gS.fj.bets[f.id] || 0;
+    b.textContent = fjFmtShort(v);
+    b.classList.toggle("show", v > 0);
+    const cell = $("fjCell-" + f.id);
+    if(cell) cell.classList.toggle("locked", gS.fj.phase === "bet" && fjCount() >= FJ_MAX_FRUITS && v === 0);
+  });
+  const mt = $("fjMyTotal"); if(mt) mt.textContent = fjFmt(fjTotal());
+  const cnt = $("fjCnt"); if(cnt) cnt.textContent = `${fjCount()} / ${FJ_MAX_FRUITS} fruits`;
+  const tw = $("fjToday"); if(tw) tw.textContent = fjFmt(FJ.todayWin);
+  const rn = $("fjRound"); if(rn) rn.textContent = FJ.round.toLocaleString("en-US");
+  const h = $("fjRHist");
+  if(h) h.innerHTML = FJ.results.length
+    ? FJ.results.map((id,i)=>`<span class="fjRItem${i === 0 ? " new" : ""}">${FJ_SVG[id]}</span>`).join("")
+    : `<span class="fjREmpty">No rounds yet — place your bets!</span>`;
+}
+function fjStart(){
+  gS.fj = { bets:{}, phase:"bet", timeLeft:FJ_BET_SECONDS, chip:gameBet };
+  fjRefresh();
+  const iv = gameEvery(()=>{
+    if(!gS.fj || gS.fj.phase !== "bet"){ clearInterval(iv); return; }
+    gS.fj.timeLeft -= 0.1;
+    if(gS.fj.timeLeft <= 0){ clearInterval(iv); fjSpin(); return; }
+    const c = $("fjCd"); if(c) c.textContent = Math.ceil(gS.fj.timeLeft);
+    const ctr = $("fjCenter"); if(ctr) ctr.classList.toggle("urgent", gS.fj.timeLeft <= 3.2);
+  }, 100);
+}
+function fjBet(id){
+  if(!gS.fj || gS.fj.phase !== "bet"){ toast("⏳ Betting is closed — wait for the next round."); return; }
+  if(!(gS.fj.bets[id] > 0) && fjCount() >= FJ_MAX_FRUITS){ toast("🚫 Max 6 fruits per round — you cannot bet on all fruits!"); return; }
+  if(!gameStake()) return;
+  gS.fj.bets[id] = (gS.fj.bets[id] || 0) + gameBet;
+  gS.fj.chip = gameBet;
+  FJ.jackpot += Math.floor(gameBet * 0.02);
+  fjRefresh();
+}
+function fjRepeat(){
+  if(!gS.fj || gS.fj.phase !== "bet") return;
+  if(fjTotal() > 0){ toast("You already have bets this round."); return; }
+  const ids = Object.keys(FJ.lastBets).filter(id => FJ.lastBets[id] > 0).slice(0, FJ_MAX_FRUITS);
+  if(!ids.length){ toast("No previous bet to repeat."); return; }
+  /* Re-stake the same coin amounts, one chip at a time through the
+     normal stake path, using the chip the original bets were made
+     with; the player's selected chip is restored afterwards. */
+  const chip = FJ.lastChip || gameBet;
+  const saved = gameBet; gameBet = chip;
+  let stopped = false;
+  for(const id of ids){
+    const taps = Math.round(FJ.lastBets[id] / chip);
+    for(let t = 0; t < taps; t++){
+      if(!gameStake()){ stopped = true; break; }
+      gS.fj.bets[id] = (gS.fj.bets[id] || 0) + chip;
+      FJ.jackpot += Math.floor(chip * 0.02);
+    }
+    if(stopped) break;
+  }
+  gameBet = saved;
+  if(fjTotal() > 0) gS.fj.chip = chip;
+  fjRefresh();
+  if(fjTotal() > 0) toast(stopped ? "Repeated as much as your balance covers." : "Last bet repeated.");
+}
+function fjPickWeighted(list){
+  let total = 0; list.forEach(f=>{ total += f.weight; });
+  let r = Math.random() * total;
+  for(const f of list){ r -= f.weight; if(r <= 0) return f; }
+  return list[list.length - 1];
+}
+function fjPickWinner(){
+  const betFruits = [], otherFruits = [];
+  FJ_FRUITS.forEach(f=>{ ((gS.fj.bets[f.id] || 0) > 0 ? betFruits : otherFruits).push(f); });
+  if(!betFruits.length) return fjPickWeighted(FJ_FRUITS);
+  if(!otherFruits.length) return fjPickWeighted(betFruits);
+  return Math.random() < WIN_CHANCE ? fjPickWeighted(betFruits) : fjPickWeighted(otherFruits);
+}
+function fjSpin(){
+  if(!gS.fj || gS.fj.phase !== "bet") return;
+  gS.fj.phase = "spin";
+  const ph = $("fjPhase"); if(ph) ph.textContent = "GOOD LUCK!";
+  const cd = $("fjCd"); if(cd) cd.textContent = "★";
+  const cc = $("fjCenter"); if(cc) cc.classList.remove("urgent");
+  fjRefresh();
+  const winner = fjPickWinner();
+  /* bonus reels spin while the light runs */
+  const reels = [0,1,2].map(i => $("fjReel" + i));
+  reels.forEach(r=>{ if(r){ r.classList.add("spin"); r.classList.remove("bonus"); } });
+  const riv = gameEvery(()=>{ reels.forEach(r=>{ if(r) r.textContent = FJ_REEL_VALS[Math.floor(Math.random() * FJ_REEL_VALS.length)]; }); }, 90);
+  /* running light: ease out around the ring and land exactly on the winner */
+  const winIdx = FJ_RING.indexOf(winner.id);
+  let totalSteps = 24;
+  while((totalSteps - 1) % FJ_RING.length !== winIdx) totalSteps++;
+  let step = 0;
+  const doStep = ()=>{
+    FJ_FRUITS.forEach(f=>{ const c = $("fjCell-" + f.id); if(c) c.classList.remove("lit"); });
+    const cell = $("fjCell-" + FJ_RING[step % FJ_RING.length]);
+    if(cell) cell.classList.add("lit");
+    step++;
+    if(step >= totalSteps){
+      FJ_FRUITS.forEach(f=>{ const c = $("fjCell-" + f.id); if(c) c.classList.remove("lit"); });
+      const wc = $("fjCell-" + winner.id); if(wc) wc.classList.add("lit");
+      clearInterval(riv);
+      let finals = [0,1,2].map(()=> FJ_REEL_VALS[Math.floor(Math.random() * FJ_REEL_VALS.length)]);
+      if(Math.random() < 0.14) finals = [finals[0], finals[0], finals[0]];
+      reels.forEach((r,i)=>{ if(r){ r.classList.remove("spin"); r.textContent = finals[i]; } });
+      const triple = finals[0] === finals[1] && finals[1] === finals[2];
+      if(triple) reels.forEach(r=>{ if(r) r.classList.add("bonus"); });
+      gameLater(()=> fjSettle(winner, triple), 450);
+      return;
+    }
+    const p = step / totalSteps;
+    gameLater(doStep, 55 + Math.pow(p, 2.2) * 330);
+  };
+  doStep();
+}
+function fjSettle(winner, triple){
+  if(!gS.fj) return;
+  gS.fj.phase = "result";
+  FJ_FRUITS.forEach(f=>{ const c = $("fjCell-" + f.id); if(c) c.classList.remove("lit"); });
+  const wc = $("fjCell-" + winner.id); if(wc) wc.classList.add("win");
+  const cd = $("fjCd"); if(cd){ cd.textContent = "×" + winner.mult; cd.classList.add("small"); }
+  const ph = $("fjPhase"); if(ph) ph.textContent = winner.name.toUpperCase() + " WINS!";
+  const totalBet = fjTotal();
+  const betOnWinner = gS.fj.bets[winner.id] || 0;
+  let payout = 0, jpBonus = 0;
+  if(betOnWinner > 0){
+    payout = betOnWinner * winner.mult;
+    if(triple) payout *= 2;
+    if(winner.id === "cherry"){
+      jpBonus = Math.floor(FJ.jackpot * 0.05);
+      FJ.jackpot -= jpBonus;
+      payout += jpBonus;
+    }
+    FJ.todayWin += payout;
+  }
+  if(totalBet > 0){ FJ.lastBets = {...gS.fj.bets}; FJ.lastChip = gS.fj.chip || gameBet; }
+  FJ.results.unshift(winner.id); FJ.results = FJ.results.slice(0, 8);
+  FJ.round++;
+  fjRefresh();
+  if(totalBet === 0){
+    gOut(`<div class="gResult mid">${winner.name} took that round — no bets were placed, so nothing was staked or paid.</div>
+          <button class="btn" style="width:100%" onclick="renderGame()">↻ New round · bet 🪙 ${gameBet}</button>`);
+    return;
+  }
+  if(payout > 0){
+    let msg = `🎉 ${winner.name} wins! Your 🪙 ${betOnWinner.toLocaleString()} on it pays ×${winner.mult}`;
+    if(triple) msg += " · 🎰 The three reels matched — win ×2 bonus!";
+    if(jpBonus > 0) msg += ` · 🎰 JACKPOT BONUS — 5% of the Grand Pool: +🪙 ${jpBonus.toLocaleString()}!`;
+    gameSettle(payout / gameBet, payout >= totalBet ? "win" : "mid", msg);
+  } else {
+    gameSettle(0, "lose", `${winner.name} won the round — your fruits missed this time.`);
+  }
+}
+
 /* ---- per-game stage renders ---- */
 const GAME_DEFS = {
   "HeroChest": { render(){
@@ -5634,6 +5942,10 @@ const GAME_DEFS = {
   }},
   "Temple Gems": { render(){
     $("gStage").innerHTML = tgStageHTML(TG_IDLE, null, null);
+  }},
+  "Fruit Jackpot": { render(){
+    $("gStage").innerHTML = fjStageHTML();
+    fjStart();
   }}
 };
 
