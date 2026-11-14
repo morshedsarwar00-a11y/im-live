@@ -3562,11 +3562,23 @@ function coverGoogleSignIn(){
      even though the bridge exists (the panel wrapper, which calls
      onGooglePanelOpened directly, works). A missing method just
      throws inside the try, and we fall through to the panel. */
+  /* Native Android app: the bridge owns this tap. Mark it pending FIRST
+     (timestamp + flag) so the sign-in tap rescue (350 ms) cannot open
+     the in-page panel underneath the native picker while it launches.
+     requestNativePicker() (APK 1.1.4+) answers "ok" / "busy", so a
+     stuck or already-running picker is visible instead of silent; on
+     an older APK the call throws and we fall back to the void bridge
+     methods, then to One Tap / the panel as before. */
   try{
     var _bridge = window.ImLiveBridge;
     if(_bridge){
+      window._coverPickerPending = true;
+      window._nativePickerAt = Date.now();
+      try{ if(_bridge.requestNativePicker() === "ok") return; }catch(e){}
       try{ _bridge.onCoverGoogleTap(); return; }catch(e){}
       try{ _bridge.onGooglePanelOpened(); return; }catch(e){}
+      window._coverPickerPending = false;
+      window._nativePickerAt = 0;
     }
   }catch(e){}
   if(_coverPickerTimer){ try{ clearTimeout(_coverPickerTimer); }catch(e){} _coverPickerTimer = null; }
@@ -3575,6 +3587,7 @@ function coverGoogleSignIn(){
   try{
     if(initGooglePicker()){
       window._coverPickerPending = true;
+      window._nativePickerAt = Date.now();
       google.accounts.id.prompt(function(notification){
         try{
           if(!notification || typeof notification.isDisplayed !== "function") return;
@@ -3590,6 +3603,7 @@ function coverGoogleSignIn(){
                sign-in in flight is not covered by the panel. */
             setTimeout(function(){
               window._coverPickerPending = false;
+              window._nativePickerAt = 0;
               if(typeof gisBusy === "undefined" || !gisBusy) openCoverGooglePanel();
             }, 400);
           }
@@ -3859,9 +3873,19 @@ function initGoogleSignIn(){
    opens Google's own account chooser (One Tap on web, the native picker
    in the app) so the user picks an account — no password is asked. */
 function gisTapButton(){
+  /* Native app first, same as the cover button: the bridge owns the
+     tap, and the pending timestamp stops the tap rescue from opening
+     anything underneath the picker. Without a bridge, One Tap. */
   try{
     var _bridge = window.ImLiveBridge;
-    if(_bridge){ try{ _bridge.onGooglePanelOpened(); return; }catch(e){} }
+    if(_bridge){
+      window._coverPickerPending = true;
+      window._nativePickerAt = Date.now();
+      try{ if(_bridge.requestNativePicker() === "ok") return; }catch(e){}
+      try{ _bridge.onGooglePanelOpened(); return; }catch(e){}
+      window._coverPickerPending = false;
+      window._nativePickerAt = 0;
+    }
   }catch(e){}
   try{
     if(typeof google !== "undefined" && google.accounts && google.accounts.id){
@@ -4002,6 +4026,10 @@ async function restoreApiSession(){
     if(me && me.email){
       if(me.status && me.status !== "approved") throw new Error("not approved");
       state.myTeam = me.team_id || "";
+      /* Remember this Gmail on the device, so the chooser lists it: the
+         native picker enters through restore (not apiEnterWithLogin),
+         and without this the list stays "0 of 2" forever for app users. */
+      deviceRemember(me.email, me.display_name);
       state.mustChangePassword = !!me.must_change_password;
       enterApp(apiUserToPerson(me), me.role);
       if(me.role === "owner") refreshPanelSettingsFromServer();
@@ -6893,7 +6921,11 @@ setTimeout(function(){
     var which = btn.getAttribute("data-signin");
     setTimeout(function(){
       if(!heroStillShown()) return; /* the tap worked — nothing to rescue */
-      if(which === "google" && window._coverPickerPending) return; /* a Google picker attempt owns this tap — the picker (or its panel fallback) is the next step, not a dead tap */
+      /* A native picker (or One Tap) attempt owns this tap for 8 s from
+         the tap: the rescue must not open the in-page panel underneath
+         it. The timestamp expires on its own, so a cancelled picker
+         never blocks the rescue forever. */
+      if(which === "google" && (Date.now() - (window._nativePickerAt || 0) < 8000)) return;
       if(typeof window.toggleLoginPanel === "function"){
         try{ window.toggleLoginPanel(which); }catch(e){}
       }
