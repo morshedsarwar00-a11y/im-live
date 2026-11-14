@@ -3865,11 +3865,18 @@ function gisTapButton(){
   }catch(e){}
   try{
     if(typeof google !== "undefined" && google.accounts && google.accounts.id){
+      /* Visible status, so a tap that opens nothing is never silent:
+         the user sees the request was received. */
+      var _mEl = $("gMsg");
+      if(_mEl) _mEl.textContent = "Opening Google's account chooser…";
       google.accounts.id.prompt(function(notification){
         try{
           if(notification && notification.isNotDisplayed && notification.isNotDisplayed()){
             var mEl = $("gMsg");
             if(mEl) mEl.textContent = "Tap an account below to sign in — no Im Live password needed.";
+          } else if(notification && ((notification.isSkippedMoment && notification.isSkippedMoment()) || (notification.isDismissedMoment && notification.isDismissedMoment()))){
+            var mEl3 = $("gMsg");
+            if(mEl3) mEl3.textContent = "The Google chooser was closed without an account — tap \"Sign in with Google\" again, or tap an account below.";
           }
         }catch(e){}
       });
@@ -3888,12 +3895,16 @@ function maybeInitGoogleSignIn(){
   if(gisInitTries++ < 20) setTimeout(maybeInitGoogleSignIn, 500);
 }
 async function handleGoogleCredential(response){
-  if(gisBusy) return;
+  if(gisBusy){ const _bEl = $("gMsg"); if(_bEl) _bEl.textContent = "Signing in, please wait…"; return; }
   const token = response && response.credential;
   const eEl = $("gErr"), peEl = $("gPwErr");
   if(eEl) eEl.textContent = ""; if(peEl) peEl.textContent = "";
   if(!token){ gisShowError("Google sign-in did not return an account — please try again, or use the password sign-in below."); return; }
   gisBusy = true;
+  /* Show this BEFORE the request, so the user can see the account
+     tap reached the app and the sign-in is in flight — a tap that
+     silently does nothing is the failure mode seen 2026-11-14. */
+  const _sEl = $("gMsg"); if(_sEl) _sEl.textContent = "Signing in…";
   try{
     const data = await apiFetch("/api/auth/google", {method: "POST", body: {idToken: token}});
     if(data && !data.accessToken && data.message){
