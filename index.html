@@ -2489,6 +2489,13 @@ button{touch-action:manipulation; -webkit-tap-highlight-color:transparent}
           <p class="note" id="gPwNote" style="text-align:center; margin-top:8px">Password is only for accounts that have an Im Live password — Google sign-in needs no password.</p>
         </form>
         <p class="note" style="text-align:center; margin-top:8px"><a href="#" onclick="toggleGooglePwMode(); return false;" id="gPwModeLink">New here? Create an account</a></p>
+        <p class="note" style="text-align:center; margin-top:4px"><a href="#" onclick="toggleForgotStep(); return false;">Forgot password?</a></p>
+        <div id="gForgotStep" class="hidden" style="margin-top:10px">
+          <div class="field"><label for="gForgotEmail">Gmail</label><input id="gForgotEmail" type="email" placeholder="your@gmail.com" autocomplete="email"></div>
+          <div class="err" id="gForgotErr"></div>
+          <div class="okmsg" id="gForgotMsg"></div>
+          <button class="btn" id="gForgotBtn" type="button" onclick="return doForgotPassword(event)" style="width:100%">Send reset link</button>
+        </div>
         <p class="note" style="text-align:center; margin-top:4px"><a href="#" onclick="backToGoogleChooser(); return false;">&#8592; Use a different account</a></p>
       </div>
     </div>
@@ -2514,8 +2521,27 @@ button{touch-action:manipulation; -webkit-tap-highlight-color:transparent}
         <button class="btn" id="phVerifyBtn" type="button" onclick="return doPhoneVerify(event)" style="width:100%">Verify &amp; Sign In</button>
         <p class="note" style="text-align:center; margin-top:6px"><a href="#" onclick="resetPhoneStep(); return false;" style="color:var(--goldDeep); font-weight:700">Use a different number</a></p>
       </form>
-      <div class="lpDivider"><span>Approved demo numbers — tap to fill</span></div>
-      <div id="phAccounts"></div>
+    </div>
+
+    <!-- Reset password (live server): opened by the reset link emailed
+         by POST /api/auth/forgot-password, as
+         ?view=reset-password&token=... — the token is read from the URL
+         (never shown) and sent back with the new password to
+         POST /api/auth/reset-password. -->
+    <div id="resetPanel" class="loginPanel hidden">
+      <div class="lpHead">
+        <button type="button" class="lpBack" onclick="backToResetCover()" aria-label="Back to sign-in">‹</button>
+        <div><b>Reset your password</b><span>Choose a new Im Live password</span></div>
+      </div>
+      <form id="resetForm" novalidate onsubmit="return doResetPassword(event)">
+        <div class="field"><label for="rpNew">New password</label><input id="rpNew" type="password" placeholder="New password" autocomplete="new-password"></div>
+        <div class="field"><label for="rpConfirm">Confirm new password</label><input id="rpConfirm" type="password" placeholder="Repeat the new password" autocomplete="new-password"></div>
+        <p class="note" style="margin:0 0 8px">At least 8 characters, with at least one letter and one number.</p>
+        <div class="err" id="rpErr"></div>
+        <div class="okmsg" id="rpMsg"></div>
+        <button class="btn" id="rpBtn" type="submit" style="width:100%">Reset password</button>
+      </form>
+      <p class="note" style="text-align:center; margin-top:8px"><a href="#" onclick="backToResetCover(); return false;">&#8592; Back to sign-in</a></p>
     </div>
 
     <p class="ageNote">By logging in, you confirm you're over 18 years old and agree to our <u>Terms &amp; Privacy Policy</u></p>
@@ -3405,11 +3431,11 @@ function shortId(id) { return "ID " + String(id || "").slice(0, 8); }
    permanent Owner account above stays exactly as it is. */
 const PEOPLE = {
   owner:   {name:"Muyin Sarkar", username:"owner", email:"muyinsarkar@gmail.com", bio:"Owner · Controls all teams", id:"0", seed:4},
-  manager: {name:"Rahim Uddin", username:"rahim_mgr", email:"rahim.uddin@gmail.com", phone:"+880 1711-000120", bio:"Bangladesh Manager", id:"500120", seed:2},
-  assistant:{name:"Farhana Yeasmin", username:"farhana_asst", email:"farhana.yeasmin@gmail.com", phone:"+880 1711-000140", bio:"Assistant · Bangladesh Manager", id:"500140", seed:1},
-  admin:   {name:"Arif Hossain", username:"arif_admin", email:"arif.hossain@gmail.com", phone:"+880 1711-000150", bio:"Admin · Bangladesh Manager", id:"500150", seed:0},
-  agent:   {name:"Sakib Rahman", username:"sakib_agent", email:"sakib.rahman@gmail.com", phone:"+880 1711-000160", bio:"Agent · Bangladesh Manager", id:"500160", seed:6},
-  host:    {name:"Nusrat Jahan", username:"nusrat_host", email:"nusrat.jahan@gmail.com", phone:"+880 1711-000170", bio:"Host · Bangladesh Manager 🎙️", id:"500170", seed:7}
+  manager: {name:"Rahim Uddin", username:"rahim_mgr", email:"rahim.uddin@gmail.com", bio:"Bangladesh Manager", id:"500120", seed:2},
+  assistant:{name:"Farhana Yeasmin", username:"farhana_asst", email:"farhana.yeasmin@gmail.com", bio:"Assistant · Bangladesh Manager", id:"500140", seed:1},
+  admin:   {name:"Arif Hossain", username:"arif_admin", email:"arif.hossain@gmail.com", bio:"Admin · Bangladesh Manager", id:"500150", seed:0},
+  agent:   {name:"Sakib Rahman", username:"sakib_agent", email:"sakib.rahman@gmail.com", bio:"Agent · Bangladesh Manager", id:"500160", seed:6},
+  host:    {name:"Nusrat Jahan", username:"nusrat_host", email:"nusrat.jahan@gmail.com", bio:"Host · Bangladesh Manager 🎙️", id:"500170", seed:7}
 };
 /* TEMPORARY Owner — morshedsarwar00@gmail.com. Kept separate from PEOPLE
    on purpose: the permanent Owner seat above (Muyin Sarkar) is untouched.
@@ -3495,21 +3521,13 @@ const LOGIN_ROLE_META = {
 };
 let loginAccountsBuilt = false;
 function buildLoginAccounts(){
+  /* No-op now: the phone panel's tap-to-fill demo numbers are gone
+     (phone sign-in is not connected to the live server), so there is
+     no account list to build here. Kept — and still called from
+     toggleLoginPanel — so the panel open path never breaks. The demo
+     PEOPLE list now feeds only the search directory. */
   if(loginAccountsBuilt) return; loginAccountsBuilt = true;
-  const rows = Object.keys(PEOPLE).map(role=>({role, p: PEOPLE[role], m: LOGIN_ROLE_META[role]}));
-  /* Google sign-in is the device account chooser (renderDeviceChooser
-     below) — it rebuilds its list every time the panel opens. Only the
-     phone panel keeps its tap-to-fill demo numbers here. */
-  /* The Owner row is left out of this tap-to-fill list on purpose: the
-     Owner has no number in this static demo at all (his real number is
-     verified server-side by the production backend, never stored in
-     shipped client code). The rows below are the placeholder demo
-     numbers. */
-  $("phAccounts").innerHTML = rows.filter(({role})=>role!=="owner").map(({role,p,m})=>`
-    <button type="button" class="acctRow" onclick="phonePick('${role}')">
-      ${avHTML(p.name, 40, p.seed)}
-      <span class="aMeta"><b>${esc(p.name)}</b><span>${esc(p.phone)}</span></span>
-    </button>`).join("");
+  const box = $("phAccounts"); if(box) box.innerHTML = "";
 }
 /* Tapping a hero sign-in button swaps the hero for that sign-in card at
    the top of the login column, so the result of the tap is always right
@@ -3637,7 +3655,7 @@ function enterApp(person, role){
 /* Sign-in is approval-gated by the LIVE SERVER, not by this page.
    The old demo list (PEOPLE / TEMP_OWNER / approvedExtra /
    removedEmails) no longer decides who may enter — it only feeds the
-   search directory and the demo phone numbers. A Gmail signs in by
+   search directory. A Gmail signs in by
    calling POST /api/auth/login with its password; the server checks
    the password, the approval status and the lockout, and returns the
    account (role, team) that drives the app. An unregistered Gmail
@@ -3893,6 +3911,7 @@ async function apiEnterWithLogin(data){
     return false;
   }
   apiSaveTokens(data.accessToken, data.refreshToken);
+  const pwEl = $("gPw"); if(pwEl) pwEl.value = ""; /* a successful sign-in must not leave the typed password in the DOM */
   deviceRemember(u.email, u.display_name);
   state.myTeam = u.team_id || "";
   state.mustChangePassword = !!data.mustChangePassword;
@@ -3967,10 +3986,99 @@ async function restoreApiSession(){
 
 function resetGooglePanel(){
   ["gErr","gMsg"].forEach(id=>{ const el = $(id); if(el) el.textContent = ""; });
+  const pw = $("gPw"); if(pw) pw.value = ""; /* never leave a typed password sitting in the (hidden) input */
+  const fs = $("gForgotStep"); if(fs) fs.classList.add("hidden");
+  ["gForgotErr","gForgotMsg"].forEach(id=>{ const el = $(id); if(el) el.textContent = ""; });
   window._gPwOpenFor = "";
   const step = $("gPwStep"); if(step) step.classList.add("hidden");
   ["deviceBar","deviceAccounts"].forEach(id=>{ const n = $(id); if(n) n.classList.remove("hidden"); });
   if(typeof gisRendered !== "undefined" && gisRendered){ ["gisWrap","gisNote"].forEach(id=>{ const n = $(id); if(n) n.classList.remove("hidden"); }); }
+}
+
+/* ---- Forgot password (live server) ----
+   "Forgot password?" in the password step asks for the Gmail and calls
+   POST /api/auth/forgot-password ({email} — ForgotPasswordDto). The
+   server always answers generically, so the same message is shown
+   whether or not the account exists; nothing about the account leaks. */
+function toggleForgotStep(){
+  const s = $("gForgotStep"); if(!s) return;
+  const willOpen = s.classList.contains("hidden");
+  s.classList.toggle("hidden", !willOpen);
+  if(willOpen){
+    const em = $("gForgotEmail");
+    if(em && !em.value) em.value = gPwEmail || "";
+    const pe = $("gForgotErr"), pm = $("gForgotMsg");
+    if(pe) pe.textContent = ""; if(pm) pm.textContent = "";
+    if(em) em.focus({preventScroll:true});
+  }
+}
+async function doForgotPassword(e){
+  if(e) e.preventDefault();
+  const emEl = $("gForgotEmail"), em = emEl ? emEl.value.trim().toLowerCase() : "";
+  const pe = $("gForgotErr"), pm = $("gForgotMsg");
+  if(pe) pe.textContent = ""; if(pm) pm.textContent = "";
+  if(!em || em.indexOf("@") < 1){ if(pe) pe.textContent = "Please enter your Gmail address."; return false; }
+  const btn = $("gForgotBtn"); if(btn) btn.disabled = true;
+  try {
+    await apiFetch("/api/auth/forgot-password", {method:"POST", body:{email: em}});
+    if(pm) pm.textContent = "If an account exists for this email, a reset link has been sent.";
+  } catch (err) {
+    if(pe) pe.textContent = apiUserMessage(err);
+  } finally {
+    if(btn) btn.disabled = false;
+  }
+  return false;
+}
+/* ---- Reset password (live server) ----
+   The forgot-password email links back here as
+   ?view=reset-password&token=... The token is read from the URL at
+   boot (never shown) and sent with the new password to
+   POST /api/auth/reset-password as {token, newPassword}
+   (ResetPasswordDto: token is a non-empty string; newPassword needs
+   8+ characters with at least one letter and one number — checked
+   here first so the server's message is not the first the user sees). */
+let _resetToken = "";
+function openResetView(token){
+  _resetToken = token || "";
+  ["googlePanel","phonePanel"].forEach(id=>{ const n = $(id); if(n) n.classList.add("hidden"); });
+  const lh = $("loginHero"); if(lh) lh.classList.add("hidden");
+  const lc = $("loginCol"); if(lc) lc.classList.add("panelOpen");
+  const rp = $("resetPanel"); if(rp) rp.classList.remove("hidden");
+  const pe = $("rpErr"), pm = $("rpMsg");
+  if(pe) pe.textContent = ""; if(pm) pm.textContent = "";
+  const n1 = $("rpNew"), n2 = $("rpConfirm");
+  if(n1) n1.value = ""; if(n2) n2.value = "";
+  if(!_resetToken && pe) pe.textContent = "This reset link is missing its token — please request a new reset link from the sign-in screen.";
+  try{ window.scrollTo(0,0); }catch(e){}
+}
+function backToResetCover(){
+  const rp = $("resetPanel"); if(rp) rp.classList.add("hidden");
+  _resetToken = "";
+  backToHero();
+}
+async function doResetPassword(e){
+  if(e) e.preventDefault();
+  const nw = $("rpNew") ? $("rpNew").value : "";
+  const cf = $("rpConfirm") ? $("rpConfirm").value : "";
+  const pe = $("rpErr"), pm = $("rpMsg");
+  if(pe) pe.textContent = ""; if(pm) pm.textContent = "";
+  if(!_resetToken){ if(pe) pe.textContent = "This reset link is missing its token — please request a new reset link from the sign-in screen."; return false; }
+  if(nw.length < 8 || !/[A-Za-z]/.test(nw) || !/\d/.test(nw)){ if(pe) pe.textContent = "Password must be at least 8 characters, with at least one letter and one number."; return false; }
+  if(nw !== cf){ if(pe) pe.textContent = "The two passwords do not match."; return false; }
+  const btn = $("rpBtn"); if(btn) btn.disabled = true;
+  try {
+    const data = await apiFetch("/api/auth/reset-password", {method:"POST", body:{token: _resetToken, newPassword: nw}});
+    if(pm) pm.textContent = "✅ " + (data && data.message ? data.message : "Password has been reset. You can now sign in.");
+    const n1 = $("rpNew"), n2 = $("rpConfirm");
+    if(n1) n1.value = ""; if(n2) n2.value = "";
+    _resetToken = "";
+    setTimeout(backToResetCover, 2500);
+  } catch (err) {
+    if(pe) pe.textContent = apiUserMessage(err);
+  } finally {
+    if(btn) btn.disabled = false;
+  }
+  return false;
 }
 
 /* Switch account (Profile menu / Settings): sign out and land straight
@@ -4005,12 +4113,6 @@ function resetPhoneStep(){
   if(s2) s2.classList.add("hidden");
   if(s1) s1.classList.remove("hidden");
   ["phErr","phErr2","phMsg"].forEach(id=>{ const el = $(id); if(el) el.textContent = ""; });
-}
-function phonePick(role){
-  buildLoginAccounts();
-  resetPhoneStep();
-  $("phNumber").value = PEOPLE[role].phone;
-  $("phMsg").textContent = "Number filled — but phone sign-in is not connected to the live server yet. Please use “Sign in with Google”.";
 }
 function signOut(){
   /* Best-effort server sign-out (revokes the refresh token), then
@@ -6778,7 +6880,16 @@ function renderAll(){
   cStart();
 }
 renderAll();
-restoreApiSession();
+/* Password reset link (?view=reset-password&token=...): show the reset
+   screen instead of restoring a saved session — the user is resetting
+   because they cannot sign in, and a reset revokes all refresh tokens
+   server-side, so a restore would fail anyway. */
+(function(){
+  let params = null;
+  try { params = new URLSearchParams(window.location.search); } catch (e) { params = null; }
+  if(params && params.get("view") === "reset-password"){ openResetView(params.get("token") || ""); return; }
+  restoreApiSession();
+})();
 </script>
 <script>
 /* Boot watchdog — deliberately a separate tiny script: if the main app
