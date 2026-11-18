@@ -3178,6 +3178,7 @@ const state = {
   user: null,            // {name, username, email, bio, id, seed}
   role: "host",          // owner | manager | assistant | admin | agent | host
   myTeam: "A",           // team the signed-in staff account belongs to
+  myRemovalConsentExpiresAt: null, // ISO timestamp from /api/auth/me — another Owner can only remove this Owner while consent is unexpired (0007)
   panelSettings: {applicationsOpen:true, maintenanceMode:false},
   pending: [             // account applications waiting for panel approval
     {name:"Joya Akter", email:"joya@example.com", role:"host", team:"A", time:"Today, 10:05"},
@@ -3936,6 +3937,7 @@ async function apiEnterWithLogin(data){
   const pwEl = $("gPw"); if(pwEl) pwEl.value = ""; /* a successful sign-in must not leave the typed password in the DOM */
   deviceRemember(u.email, u.display_name);
   state.myTeam = u.team_id || "";
+  state.myRemovalConsentExpiresAt = u.removal_consent_expires_at || null;
   state.mustChangePassword = !!data.mustChangePassword;
   enterApp(apiUserToPerson(u), u.role);
   if(u.role === "owner"){
@@ -4017,6 +4019,7 @@ async function restoreApiSession(){
       if(me.status && me.status !== "approved") throw new Error("not approved");
       try { localStorage.setItem(API_ROLE_KEY, me.role || ""); } catch (e) {}
       state.myTeam = me.team_id || "";
+      state.myRemovalConsentExpiresAt = me.removal_consent_expires_at || null;
       state.mustChangePassword = !!me.must_change_password;
       enterApp(apiUserToPerson(me), me.role);
       if(me.role === "owner"){
@@ -6583,6 +6586,19 @@ function renderStaff(){
       <button class="listRow" onclick="toggleSetting('applicationsOpen')">New account applications <span class="lrVal">${ps.applicationsOpen ? "Open" : "Closed"}</span><span class="chev">›</span></button>
       <button class="listRow" onclick="toggleSetting('maintenanceMode')">Maintenance mode <span class="lrVal">${ps.maintenanceMode ? "On" : "Off"}</span><span class="chev">›</span></button>
     </div>`;
+    /* ---- removal protection (0007): an Owner can only be removed by
+       another Owner while THIS Owner granted consent (24h). Only the
+       Owner themself can grant or revoke it, here. ---- */
+    const consentMs = state.myRemovalConsentExpiresAt ? new Date(state.myRemovalConsentExpiresAt).getTime() : NaN;
+    const consentOn = !Number.isNaN(consentMs) && consentMs > Date.now();
+    html += `<div class="secHead"><h2 style="font-size:16px">🛡️ Removal protection</h2></div>
+    <p class="note" style="margin:0 0 8px">No other Owner can remove <b>you</b> without your own consent. Grant it only when you agree to be removed — it lasts 24 hours, then it expires on its own. Revoke it any time.</p>
+    <div class="listGroup">
+      <div class="listRow" style="cursor:default">My removal consent <span class="lrVal">${consentOn ? "ON — until " + esc(apiTime(state.myRemovalConsentExpiresAt)) : "OFF"}</span></div>
+      ${consentOn
+        ? `<button class="listRow" onclick="toggleRemovalConsent(false)">Revoke my consent <span class="chev">›</span></button>`
+        : `<button class="listRow" onclick="toggleRemovalConsent(true)">Grant consent for 24 hours <span class="chev">›</span></button>`}
+    </div>`;
   }
   /* ---- audit log: Owner sees everything; a Manager sees only their
      own team's audit entries — never another team's information. ---- */
@@ -6729,6 +6745,21 @@ async function toggleSetting(key){
     saveCachedSettings();
     renderStaff();
     toast("Panel setting updated ✓");
+  } catch (err) {
+    toast(apiUserMessage(err));
+  }
+}
+
+/* Removal protection (0007): grant (24h) or revoke my own consent
+   for another Owner to remove me. Only an Owner can do this, and it
+   only ever touches my own account. */
+async function toggleRemovalConsent(grant){
+  if(state.role!=="owner"){ toast("⛔ Only the Owner can change removal consent."); return; }
+  try {
+    const data = await apiFetch("/api/auth/me/removal-consent", {method: "POST", body: {consent: !!grant}});
+    state.myRemovalConsentExpiresAt = (data && data.expiresAt) ? data.expiresAt : null;
+    renderStaff();
+    toast((data && data.consent) ? "✅ Removal consent granted for 24 hours." : "✅ Removal consent revoked.");
   } catch (err) {
     toast(apiUserMessage(err));
   }
